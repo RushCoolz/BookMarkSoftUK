@@ -66,7 +66,8 @@ export default function RootLayout({
             }}
           />
         </head>
-        <body className="min-h-full flex flex-col bg-slate-50/50 dark:bg-[#0B1120] text-slate-900 dark:text-slate-50 transition-colors duration-300 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-50/50 via-slate-50/20 to-transparent dark:from-blue-900/10 dark:via-[#0B1120] dark:to-[#0B1120] bg-fixed">
+        <body className="min-h-full flex flex-col bg-slate-50 dark:bg-[#0B1120] text-slate-900 dark:text-slate-50 transition-colors duration-300">
+          <div className="fixed inset-0 z-[-1] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-50/50 via-slate-50/20 to-transparent dark:from-blue-900/10 dark:via-[#0B1120] dark:to-[#0B1120]" />
           <AnalyticsProvider gtmId={process.env.NEXT_PUBLIC_GTM_ID || ''} clarityId={process.env.NEXT_PUBLIC_CLARITY_ID || ''} />
           <ThemeProvider>
             <AuthProvider>

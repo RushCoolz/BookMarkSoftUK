@@ -24,11 +24,21 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function ToolPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
-  const tool = toolCategories.flatMap(c => c.tools).find(t => generateToolId(t.title) === resolvedParams.id);
+  let tool = null;
+  let categoryTitle = "";
+  
+  for (const category of toolCategories) {
+    const foundTool = category.tools.find(t => generateToolId(t.title) === resolvedParams.id);
+    if (foundTool) {
+      tool = foundTool;
+      categoryTitle = category.title;
+      break;
+    }
+  }
   
   if (!tool) {
     notFound();
   }
 
-  return <ToolPageClient tool={tool} toolId={resolvedParams.id} />;
+  return <ToolPageClient tool={tool} toolId={resolvedParams.id} categoryTitle={categoryTitle} />;
 }
