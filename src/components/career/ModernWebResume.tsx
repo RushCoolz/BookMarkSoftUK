@@ -1062,11 +1062,14 @@ export function ModernWebResume({ candidateData, onDownloadPdf, isStandalone = f
         </section>
 
         {/* Work Experience with Verified Vouches */}
-        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+        <section 
+          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6"
+          style={{ borderTop: `4px solid ${accentColor}` }}
+        >
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div>
               <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-emerald-500" />
+                <Building2 className="w-5 h-5 shrink-0" style={{ color: accentColor }} />
                 Verified Employment History
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -1094,6 +1097,7 @@ export function ModernWebResume({ candidateData, onDownloadPdf, isStandalone = f
                 <div 
                   key={exp.id} 
                   className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 space-y-3 transition-all"
+                  style={isExpOpen ? { borderLeft: `3px solid ${accentColor}` } : {}}
                 >
                   <div 
                     onClick={() => toggleExperience(exp.id)}
@@ -1101,12 +1105,15 @@ export function ModernWebResume({ candidateData, onDownloadPdf, isStandalone = f
                   >
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors">
+                        <h3 className="text-base font-bold text-slate-900 dark:text-white transition-colors">
                           {exp.role}
                         </h3>
-                        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isExpOpen ? "rotate-180" : ""}`} />
+                        <ChevronDown 
+                          className={`w-4 h-4 text-slate-400 transition-transform ${isExpOpen ? "rotate-180" : ""}`}
+                          style={isExpOpen ? { color: accentColor } : undefined}
+                        />
                       </div>
-                      <p className="text-xs font-semibold text-blue-600 dark:text-blue-400">
+                      <p className="text-xs font-semibold" style={{ color: accentColor }}>
                         {exp.company} — <span className="text-slate-500 font-normal">{exp.location}</span>
                       </p>
                     </div>
@@ -1127,7 +1134,7 @@ export function ModernWebResume({ candidateData, onDownloadPdf, isStandalone = f
                       <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300 leading-relaxed pt-1">
                         {exp.bullets.map((bullet, idx) => (
                           <li key={idx} className="flex items-start gap-2">
-                            <span className="text-blue-500 font-bold shrink-0 mt-0.5">•</span>
+                            <span className="font-bold shrink-0 mt-0.5" style={{ color: accentColor }}>•</span>
                             <span>{bullet}</span>
                           </li>
                         ))}
@@ -1141,41 +1148,48 @@ export function ModernWebResume({ candidateData, onDownloadPdf, isStandalone = f
         </section>
 
         {/* Education Section */}
-        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm space-y-3">
-          <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-            Education &amp; Qualifications
-          </h2>
-          <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+        <section 
+          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm space-y-3"
+          style={{ borderTop: `4px solid ${accentColor}` }}
+        >
+          <div className="flex items-center gap-2">
+            <GraduationCap className="w-5 h-5 shrink-0" style={{ color: accentColor }} />
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+              Education &amp; Qualifications
+            </h2>
+          </div>
+          <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium pl-7">
             {candidateData.education}
           </p>
         </section>
 
-        {/* Anti-Phishing Candidate Notice & Safe Domain Seal Footer */}
-        <footer className="p-6 rounded-3xl bg-slate-900 text-white space-y-4">
+        {/* Safe Domain Seal Footer */}
+        <footer className="p-6 rounded-3xl bg-slate-900 text-white space-y-4" style={{ borderTop: `4px solid ${accentColor}` }}>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                <span className="font-bold text-sm">Bookmarksoft Candidate Trust &amp; Anti-Phishing Guard</span>
+                <span className="font-bold text-sm">Bookmarksoft Candidate Trust &amp; Safe Link Verification</span>
               </div>
               <p className="text-xs text-slate-300 max-w-xl leading-relaxed">
-                This web dossier is served on a certified candidate wildcard subdomain. It does not harvest credentials, require logins, or execute arbitrary third-party scripts.
+                This online CV is served on a verified personal link. It does not collect passwords, require logins, or run third-party tracking scripts.
               </p>
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={handleDownload}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-md flex items-center gap-1.5"
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
+                style={{ backgroundColor: accentColor }}
               >
                 <Download className="w-4 h-4" />
-                Download Clean ATS PDF
+                Download Free A4 PDF
               </button>
             </div>
           </div>
 
           <div className="pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400">
-            <span>Candidate Dossier URL: <strong className="text-white font-mono">{wildcardDomainUrl}</strong></span>
+            <span>Personal Online CV Link: <strong className="text-white font-mono">{wildcardDomainUrl}</strong></span>
             <div className="flex items-center gap-3">
               <span>Protected by UK GDPR &amp; Privacy Policy</span>
               <span>•</span>

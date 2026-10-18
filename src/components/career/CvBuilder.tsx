@@ -367,6 +367,8 @@ ${education}
     setTimeout(() => setCopiedWildcardUrl(false), 2000);
   };
 
+  const activeAccentColor = customAccentHex || DOSSIER_THEMES[dossierTheme]?.accentHex || ATS_DOCUMENT_THEMES[atsDocTheme].hex;
+
   const handleDownloadPdf = async () => {
     setIsDownloading(true);
     try {
@@ -387,7 +389,7 @@ ${education}
           frameworks: skillsFrameworks,
         },
         education,
-        accentHex: customAccentHex || ATS_DOCUMENT_THEMES[atsDocTheme].hex,
+        accentHex: activeAccentColor,
       });
     } finally {
       setIsDownloading(false);
@@ -761,7 +763,11 @@ ${education}
                       </label>
                       <select
                         value={atsDocTheme}
-                        onChange={(e) => setAtsDocTheme(e.target.value as AtsDocumentThemeId)}
+                        onChange={(e) => {
+                          const val = e.target.value as AtsDocumentThemeId;
+                          setAtsDocTheme(val);
+                          setCustomAccentHex(ATS_DOCUMENT_THEMES[val].hex);
+                        }}
                         className="w-full p-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
                       >
                         {(Object.keys(ATS_DOCUMENT_THEMES) as AtsDocumentThemeId[]).map((themeKey) => (
@@ -1530,12 +1536,23 @@ ${education}
                 </div>
               </div>
             ) : previewMode === 'visual' ? (
-              <div className="p-5 font-sans text-xs space-y-4 max-h-[520px] overflow-y-auto bg-slate-50/40 dark:bg-slate-950/40">
-                <div className={`border-b pb-3 space-y-1 ${ATS_DOCUMENT_THEMES[atsDocTheme].borderClass}`}>
+              <div 
+                className={`p-5 text-xs space-y-4 max-h-[520px] overflow-y-auto bg-slate-50/40 dark:bg-slate-950/40 ${
+                  dossierFont === 'mono' ? 'font-mono' : dossierFont === 'serif' ? 'font-serif' : 'font-sans'
+                }`}
+                style={{ borderTop: `4px solid ${activeAccentColor}` }}
+              >
+                <div 
+                  className="border-b pb-3 space-y-1"
+                  style={{ borderColor: `${activeAccentColor}40` }}
+                >
                   <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
                     {name || "Your Name"}
                   </h2>
-                  <p className={`text-xs font-bold ${ATS_DOCUMENT_THEMES[atsDocTheme].textClass}`}>
+                  <p 
+                    className="text-xs font-bold"
+                    style={{ color: activeAccentColor }}
+                  >
                     {roleHeadline}
                   </p>
                   <p className="text-[10px] text-slate-500">
@@ -1545,14 +1562,20 @@ ${education}
                     ✓ {rightToWork}
                   </span>
                   {includeWebDossier && (
-                    <div className={`text-[10px] font-mono mt-0.5 ${ATS_DOCUMENT_THEMES[atsDocTheme].textClass}`}>
+                    <div 
+                      className="text-[10px] font-mono mt-0.5"
+                      style={{ color: activeAccentColor }}
+                    >
                       🌐 {wildcardUrl}
                     </div>
                   )}
                 </div>
 
                 <div className="space-y-1">
-                  <span className={`text-[10px] font-bold uppercase tracking-wider block border-b pb-0.5 ${ATS_DOCUMENT_THEMES[atsDocTheme].textClass} ${ATS_DOCUMENT_THEMES[atsDocTheme].borderClass}`}>
+                  <span 
+                    className="text-[10px] font-bold uppercase tracking-wider block border-b pb-0.5"
+                    style={{ color: activeAccentColor, borderColor: `${activeAccentColor}35` }}
+                  >
                     Professional Summary
                   </span>
                   <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed">
@@ -1561,24 +1584,36 @@ ${education}
                 </div>
 
                 <div className="space-y-3">
-                  <span className={`text-[10px] font-bold uppercase tracking-wider block border-b pb-0.5 ${ATS_DOCUMENT_THEMES[atsDocTheme].textClass} ${ATS_DOCUMENT_THEMES[atsDocTheme].borderClass}`}>
+                  <span 
+                    className="text-[10px] font-bold uppercase tracking-wider block border-b pb-0.5"
+                    style={{ color: activeAccentColor, borderColor: `${activeAccentColor}35` }}
+                  >
                     Employment Experience
                   </span>
                   {experience.map(exp => (
-                    <div key={exp.id} className="space-y-1">
+                    <div 
+                      key={exp.id} 
+                      className="space-y-1 pl-2.5 border-l-2"
+                      style={{ borderColor: `${activeAccentColor}40` }}
+                    >
                       <div className="flex justify-between items-baseline font-bold text-[11px] text-slate-900 dark:text-white">
                         <span>{exp.role}</span>
                         <span className="font-mono text-[10px] text-slate-400 font-normal">{exp.dates}</span>
                       </div>
-                      <div className="text-[10px] text-slate-500">{exp.company} — {exp.location}</div>
+                      <div className="text-[10px] font-semibold" style={{ color: activeAccentColor }}>
+                        {exp.company} <span className="text-slate-500 font-normal">— {exp.location}</span>
+                      </div>
                       {exp.verifiedBy && (
                         <div className="text-[9px] font-bold text-emerald-600">
                           ✓ Verified by {exp.verifiedBy}
                         </div>
                       )}
-                      <ul className="list-disc list-inside text-[10px] text-slate-700 dark:text-slate-300 space-y-0.5 pl-1">
+                      <ul className="text-[10px] text-slate-700 dark:text-slate-300 space-y-0.5 pl-1">
                         {exp.bullets.map((b, i) => (
-                          <li key={i}>{b}</li>
+                          <li key={i} className="flex items-start gap-1.5">
+                            <span className="font-bold shrink-0" style={{ color: activeAccentColor }}>•</span>
+                            <span>{b}</span>
+                          </li>
                         ))}
                       </ul>
                     </div>
@@ -1586,18 +1621,24 @@ ${education}
                 </div>
 
                 <div className="space-y-1 pt-1">
-                  <span className={`text-[10px] font-bold uppercase tracking-wider block border-b pb-0.5 ${ATS_DOCUMENT_THEMES[atsDocTheme].textClass} ${ATS_DOCUMENT_THEMES[atsDocTheme].borderClass}`}>
+                  <span 
+                    className="text-[10px] font-bold uppercase tracking-wider block border-b pb-0.5"
+                    style={{ color: activeAccentColor, borderColor: `${activeAccentColor}35` }}
+                  >
                     Technical Skills
                   </span>
-                  <p className="text-[10px] text-slate-700 dark:text-slate-300">
-                    <strong>Languages:</strong> {skillsLanguages}<br />
-                    <strong>Frameworks:</strong> {skillsFrameworks}<br />
-                    <strong>Cloud &amp; DevOps:</strong> {skillsCloud}
+                  <p className="text-[10px] text-slate-700 dark:text-slate-300 leading-relaxed">
+                    <strong style={{ color: activeAccentColor }}>Languages:</strong> {skillsLanguages}<br />
+                    <strong style={{ color: activeAccentColor }}>Frameworks:</strong> {skillsFrameworks}<br />
+                    <strong style={{ color: activeAccentColor }}>Cloud &amp; DevOps:</strong> {skillsCloud}
                   </p>
                 </div>
 
                 <div className="space-y-1 pt-1">
-                  <span className={`text-[10px] font-bold uppercase tracking-wider block border-b pb-0.5 ${ATS_DOCUMENT_THEMES[atsDocTheme].textClass} ${ATS_DOCUMENT_THEMES[atsDocTheme].borderClass}`}>
+                  <span 
+                    className="text-[10px] font-bold uppercase tracking-wider block border-b pb-0.5"
+                    style={{ color: activeAccentColor, borderColor: `${activeAccentColor}35` }}
+                  >
                     Education
                   </span>
                   <p className="text-[10px] text-slate-700 dark:text-slate-300">
