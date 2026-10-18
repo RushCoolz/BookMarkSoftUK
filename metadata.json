@@ -1,0 +1,6 @@
+{
+  "name": "BookMarkSoft UK - Utility & Career Intelligence Suite",
+  "description": "The premier UK utility and career intelligence portal. Free ATS X-ray, CV view tracking, Vouch verification, Ghost tracker, plus comprehensive UK tax, property, energy, student loan, and government utilities.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
