@@ -46,7 +46,7 @@ export function Logo({ className = "w-8 h-8", showBadge = true }: { className?: 
 
       <div className="flex flex-col">
         <div className="flex items-center gap-1.5">
-          <span className="font-extrabold text-xl tracking-tight text-slate-900 dark:text-white">
+          <span className="font-extrabold text-base sm:text-xl tracking-tight text-slate-900 dark:text-white shrink-0">
             BookMark<span className="text-blue-600 dark:text-blue-400">Soft</span>
           </span>
           {showBadge && (

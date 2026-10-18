@@ -44,6 +44,7 @@ import {
   ATS_DOCUMENT_THEMES,
   AtsDocumentThemeId
 } from "../../types/theme";
+import { useAuth } from "../../services/authContext";
 
 interface ExperienceItem {
   id: string;
@@ -61,6 +62,7 @@ export interface CvBuilderProps {
 }
 
 export function CvBuilder({ onNavigateToTracking, onNavigateToScanner }: CvBuilderProps) {
+  const auth = useAuth();
   // Form State
   const [name, setName] = useState("Alex Turner");
   const [roleHeadline, setRoleHeadline] = useState("Lead Software Engineer • Distributed Payments & Cloud");
@@ -330,7 +332,7 @@ export function CvBuilder({ onNavigateToTracking, onNavigateToScanner }: CvBuild
 ${roleHeadline}
 ${location} | ${email} | ${phone} | ${github} | ${linkedin}
 UK Right to Work: ${rightToWork}
-${includeWebDossier ? `Interactive Web Dossier: ${wildcardUrl}` : ""}
+${includeWebDossier ? `Online CV Link: ${wildcardUrl}` : ""}
 
 PROFESSIONAL SUMMARY
 ${summary}
@@ -420,148 +422,190 @@ ${education}
     <div className="space-y-6">
       {/* Hero Header */}
       <div className="bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950 text-white rounded-2xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
-        <div className="max-w-3xl space-y-3 relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30">
-            <Sparkles className="w-3.5 h-3.5" />
-            Guaranteed Single-Column ATS Architecture • Free &amp; On-Site
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-            ATS Resume Builder: Linear &amp; Parse-Guaranteed
-          </h1>
-          <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-            Never lose interviews to multi-column Canva scrambling. Build a beautiful, verified single-column CV 
-            engineered to score <strong>95%+ on Workday, Taleo, and Greenhouse</strong>. 
-            Download instantly as an on-site A4 PDF, or publish your interactive Web Resume Dossier on your personal wildcard domain.
-          </p>
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10 w-full">
+          <div className="space-y-3 flex-1">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+              <Sparkles className="w-3.5 h-3.5" />
+              Recruiter-Approved Format • Free &amp; Instant Download
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+              Job-Ready CV Builder
+            </h1>
+            <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-4xl">
+              Stop getting filtered out by automated recruitment software. Create a clean, professional CV that recruiters 
+              and hiring managers can easily read. Download your free A4 PDF instantly or share your personal online link.
+            </p>
 
-          <div className="pt-2 flex flex-wrap items-center gap-3">
-            <button
-              onClick={handleDownloadPdf}
-              disabled={isDownloading}
-              className="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-md flex items-center gap-1.5"
-            >
-              <Download className="w-4 h-4" />
-              {isDownloading ? "Generating PDF..." : "Download Clean ATS PDF (On-Site)"}
-            </button>
-            <button
-              onClick={copyPlainText}
-              className="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white/10 hover:bg-white/20 text-slate-200 transition-all border border-white/20 flex items-center gap-1.5"
-            >
-              {copiedPlainText ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-              {copiedPlainText ? "Copied Plain Text" : "Copy ATS Portal Plain Text"}
-            </button>
-            {onNavigateToScanner && (
+            <div className="pt-2 flex flex-wrap items-center gap-3">
               <button
-                onClick={onNavigateToScanner}
-                className="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-blue-600/30 hover:bg-blue-600/40 text-blue-200 border border-blue-400/30 transition-all flex items-center gap-1.5"
+                onClick={handleDownloadPdf}
+                disabled={isDownloading}
+                className="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
               >
-                <FileSearch className="w-4 h-4 text-blue-400" />
-                Scan Existing CV (ATS X-Ray)
+                <Download className="w-4 h-4" />
+                {isDownloading ? "Generating PDF..." : "Download Free A4 PDF"}
               </button>
-            )}
+              <button
+                onClick={copyPlainText}
+                className="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white/10 hover:bg-white/20 text-slate-200 transition-all border border-white/20 flex items-center gap-1.5 cursor-pointer"
+              >
+                {copiedPlainText ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                {copiedPlainText ? "Copied Text" : "Copy Plain Text (For Online Job Forms)"}
+              </button>
+              {onNavigateToScanner && (
+                <button
+                  onClick={onNavigateToScanner}
+                  className="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-blue-600/30 hover:bg-blue-600/40 text-blue-200 border border-blue-400/30 transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <FileSearch className="w-4 h-4 text-blue-400" />
+                  Review Existing CV
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Quick Metrics / Assurance Card on the Right */}
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full lg:w-72 shrink-0 bg-white/5 border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-xs">
+            <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
+              <div className="text-xl font-black text-emerald-400 font-mono">95%+</div>
+              <div className="text-[11px] text-slate-300 font-medium">Recruiter Pass Score</div>
+            </div>
+            <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
+              <div className="text-xl font-black text-blue-400 font-mono">Clean</div>
+              <div className="text-[11px] text-slate-300 font-medium">No Confusing Tables</div>
+            </div>
+            <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
+              <div className="text-xl font-black text-purple-400 font-mono">100%</div>
+              <div className="text-[11px] text-slate-300 font-medium">Private on Device</div>
+            </div>
+            <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
+              <div className="text-xl font-black text-amber-400 font-mono">Free</div>
+              <div className="text-[11px] text-slate-300 font-medium">Unlimited PDF Exports</div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Main Grid: Form Editor vs Live Preview & ATS Health */}
+      {/* Main Grid: Form Editor vs Live Preview & CV Screening Health */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Form Editor (7 cols) */}
         <div className="lg:col-span-7 space-y-6">
 
-          {/* Feature: Modern Web Page Resume & Wildcard Domain Dossier Setup */}
-          <div className="bg-gradient-to-r from-blue-900/10 via-indigo-900/10 to-purple-900/10 dark:from-blue-950/40 dark:via-indigo-950/40 dark:to-purple-950/40 border border-blue-200 dark:border-blue-800/80 rounded-2xl p-6 shadow-sm space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <Globe className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                <div>
-                  <h3 className="font-bold text-slate-900 dark:text-white text-base">
-                    Interactive Web Resume &amp; Wildcard Domain
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Host a modern interactive dossier with expandable skills &amp; architecture deep dives.
-                  </p>
+          {/* Feature: Personal Online CV Link (Available upon Sign Up) */}
+          {auth.isSignedIn && auth.user ? (
+            <div className="bg-gradient-to-r from-blue-900/10 via-indigo-900/10 to-purple-900/10 dark:from-blue-950/40 dark:via-indigo-950/40 dark:to-purple-950/40 border border-blue-200 dark:border-blue-800/80 rounded-2xl p-5 shadow-xs space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <Globe className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  <div>
+                    <h3 className="font-bold text-slate-900 dark:text-white text-base">
+                      Your Personal Online CV Link
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Share your interactive CV directly with recruiters and employers.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
+                    Active for {auth.user.name}
+                  </span>
                 </div>
               </div>
 
-              {/* Toggle to include or disable web dossier */}
-              <label className="flex items-center gap-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={includeWebDossier}
-                  onChange={(e) => setIncludeWebDossier(e.target.checked)}
-                  className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300"
-                />
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                  Enable Web Dossier
-                </span>
-              </label>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                <div className="flex-1 flex items-center rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs min-w-0">
+                  <span className="text-slate-400 select-none shrink-0 font-mono">https://</span>
+                  <span className="font-mono font-bold text-blue-600 dark:text-blue-400 truncate">
+                    {auth.user.customSlug || customSlug}
+                  </span>
+                  <span className="text-slate-500 font-mono select-none shrink-0">.bookmarksoft.uk</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={copyWildcard}
+                    className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-400 flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                    title="Copy your personal link"
+                  >
+                    {copiedWildcardUrl ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedWildcardUrl ? "Copied" : "Copy Link"}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowFullscreenModal(true)}
+                    className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                    title="Preview your online CV"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>View Online CV</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 border border-blue-200/80 dark:border-blue-800/80 rounded-2xl p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div className="p-2.5 rounded-xl bg-blue-600 text-white shrink-0 mt-0.5">
+                  <Globe className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base">
+                    Want your own personal online CV link?
+                  </h3>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mt-0.5">
+                    Claim a unique web address like <strong className="font-mono text-blue-600 dark:text-blue-400">your-name.bookmarksoft.uk</strong> to share directly with recruiters. Claimed when creating a free account.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => auth.openAuthModal('signup')}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white transition-all shadow-xs flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
+              >
+                <span>Create Account to Claim Link</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
+          {/* Section: CV Styling & Layout Options */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-5">
+            <div>
+              <h3 className="font-bold text-slate-900 dark:text-white text-base">
+                CV Styling &amp; Layout Options
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Customise colors, document layout, and typography for your generated PDF and online link
+              </p>
             </div>
 
-            {includeWebDossier && (
-              <div className="space-y-4 pt-1 animate-fadeIn">
-                {/* Subdomain Configuration */}
+            {/* Dossier Theme & Accent Color Palettes */}
+            <div className="space-y-4 pt-3 border-t border-slate-200 dark:border-slate-800">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                    Your Personal Wildcard Subdomain:
+                  <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    <Palette className="w-3.5 h-3.5 text-blue-500" />
+                    Color Palette &amp; Accent:
                   </label>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 flex items-center rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs">
-                      <span className="text-slate-400 select-none">https://</span>
-                      <input
-                        type="text"
-                        value={customSlug}
-                        onChange={(e) => setCustomSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                        placeholder="alex-turner"
-                        className="bg-transparent font-mono font-bold text-blue-600 dark:text-blue-400 focus:outline-none px-1"
-                      />
-                      <span className="text-slate-500 font-mono select-none">.bookmarksoft.uk</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={copyWildcard}
-                      className="px-3.5 py-2 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-400 flex items-center gap-1.5 transition-all shadow-xs"
-                      title="Copy wildcard domain URL"
-                    >
-                      {copiedWildcardUrl ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                      <span>{copiedWildcardUrl ? "Copied" : "Copy Link"}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowFullscreenModal(true)}
-                      className="px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-1.5 transition-all shadow-xs"
-                      title="Preview interactive web resume fullscreen"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                      <span>Preview Dossier</span>
-                    </button>
-                  </div>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Choose from 12 curated palettes or pick your own custom accent
+                  </span>
                 </div>
+                <span className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-900 self-start sm:self-auto">
+                  {DOSSIER_THEMES[dossierTheme]?.name || "Sapphire Modern"}
+                </span>
+              </div>
 
-                {/* Dossier Theme & Accent Color Palettes */}
-                <div className="space-y-4 pt-3 border-t border-slate-200 dark:border-slate-800">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                        <Palette className="w-3.5 h-3.5 text-blue-500" />
-                        Web Dossier Personality &amp; Color Theme:
-                      </label>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                        Select from 12 verified engineering themes or specify a custom accent
-                      </span>
-                    </div>
-                    <span className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-900 self-start sm:self-auto">
-                      {DOSSIER_THEMES[dossierTheme]?.name || "Sapphire Modern"}
-                    </span>
-                  </div>
-
-                  {/* Category Filter Tabs */}
-                  <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl text-xs overflow-x-auto">
-                    {[
-                      { id: 'all', label: 'All Themes (12)' },
-                      { id: 'systems', label: 'Systems & Cloud' },
-                      { id: 'leadership', label: 'Staff+ & Exec' },
-                      { id: 'creative', label: 'Vibrant & Modern' },
-                    ].map((cat) => (
+              {/* Category Filter Tabs */}
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl text-xs overflow-x-auto">
+                {[
+                  { id: 'all', label: 'All Themes (12)' },
+                  { id: 'systems', label: 'Professional' },
+                  { id: 'leadership', label: 'Executive' },
+                  { id: 'creative', label: 'Modern & Vibrant' },
+                ].map((cat) => (
                       <button
                         key={cat.id}
                         type="button"
@@ -685,13 +729,13 @@ ${education}
                     </div>
                   </div>
 
-                  {/* ATS Engine & Document Styling Presets */}
+                  {/* Layout & Document Styling Presets */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                    {/* ATS Machine Simulator Skin */}
+                    {/* Screening View Style */}
                     <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-1.5">
                       <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                         <Terminal className="w-3.5 h-3.5 text-emerald-500" />
-                        ATS Machine Parser Skin:
+                        Recruiter System View Style:
                       </label>
                       <select
                         value={atsSkin}
@@ -709,11 +753,11 @@ ${education}
                       </p>
                     </div>
 
-                    {/* ATS Document Header Style */}
+                    {/* Document Header Accent */}
                     <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-1.5">
                       <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                         <Sliders className="w-3.5 h-3.5 text-blue-500" />
-                        ATS CV Document Accent Style:
+                        A4 Document Accent Style:
                       </label>
                       <select
                         value={atsDocTheme}
@@ -727,7 +771,7 @@ ${education}
                         ))}
                       </select>
                       <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                        Applied to generated PDF headings &amp; A4 document preview.
+                        Applied to generated PDF headings and document preview.
                       </p>
                     </div>
                   </div>
@@ -735,7 +779,7 @@ ${education}
                   {/* Typography Pairing */}
                   <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
                     <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
-                      Typography Styling:
+                      Font Style:
                     </span>
                     <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg text-xs">
                       {(['sans', 'mono', 'serif'] as const).map((font) => (
@@ -756,7 +800,7 @@ ${education}
                   </div>
                 </div>
 
-                {/* Anti-Phishing Guard Safety Indicator */}
+                {/* Safe Link & Content Verification Indicator */}
                 <div className={`p-3.5 rounded-xl border text-xs flex items-center justify-between gap-3 ${
                   phishingAudit.isClean
                     ? "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/40 text-emerald-900 dark:text-emerald-200"
@@ -771,22 +815,20 @@ ${education}
                     <div>
                       <span className="font-bold">
                         {phishingAudit.isClean 
-                          ? "Anti-Phishing Guard: PASSED (Clean of Phishing & Safe for Wildcard Hosting)" 
-                          : "Phishing & Credential Warning Detected"}
+                          ? "Content & Link Safety: PASSED (Clean & safe to share)" 
+                          : "Warning: Review Recommended"}
                       </span>
                       {!phishingAudit.isClean && (
                         <div className="text-[11px] text-rose-700 dark:text-rose-300 mt-0.5">
-                          Suspicious content flagged: {phishingAudit.detectedThreats.join(", ") || "Suspicious URL shortener detected"}
+                          Suspicious link detected: {phishingAudit.detectedThreats.join(", ") || "Shortened link detected"}
                         </div>
                       )}
                     </div>
                   </div>
                   <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/60 dark:bg-slate-900">
-                    {phishingAudit.isClean ? "Safe Link Verified" : "Review Required"}
+                    {phishingAudit.isClean ? "Safe Link Verified" : "Review Needed"}
                   </span>
                 </div>
-              </div>
-            )}
           </div>
 
           {/* Section 1: Contact & Right to Work */}
@@ -1098,16 +1140,16 @@ ${education}
             </div>
           </div>
 
-          {/* Section 5: Featured Projects & Architecture Deep Dives (Interactive Web Dossier) */}
+          {/* Section 5: Key Projects & Work Highlights */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
               <div>
                 <h3 className="font-bold text-slate-900 dark:text-white text-base flex items-center gap-2">
                   <Code2 className="w-4 h-4 text-blue-600" />
-                  5. Featured Projects &amp; Architecture Deep Dives ({projects.length})
+                  5. Key Projects &amp; Work Highlights ({projects.length})
                 </h3>
                 <p className="text-[11px] text-slate-500">
-                  Interactive case studies with problem statements, tradeoffs, and system metrics for your Web Dossier.
+                  Highlight key accomplishments, problem solving, and results for your CV and online link.
                 </p>
               </div>
               <button
@@ -1240,10 +1282,10 @@ ${education}
                           </div>
                         </div>
 
-                        {/* Architecture Deep Dive Inputs */}
+                        {/* Project Details */}
                         <div className="p-3 rounded-lg border border-blue-200/60 dark:border-blue-900/40 bg-blue-50/30 dark:bg-blue-950/20 space-y-2.5">
                           <span className="font-bold text-[11px] text-blue-700 dark:text-blue-300 block">
-                            Architecture Deep Dive (Expandable in Dossier)
+                            Key Details &amp; Results (Visible in Online CV)
                           </span>
                           
                           <div>
@@ -1321,11 +1363,11 @@ ${education}
 
         {/* Right Column: Live Document Preview & Health Meter (5 cols) */}
         <div className="lg:col-span-5 space-y-5 sticky top-20">
-          {/* ATS Health Score Card */}
+          {/* Recruiter System Compatibility Score Card */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                Live ATS Parseability Meter
+                Recruiter Screening Score
               </span>
               <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
                 {atsScore}%
@@ -1342,19 +1384,19 @@ ${education}
             <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 text-slate-600 dark:text-slate-300 font-medium">
               <div className="flex items-center gap-1.5">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                <span>Single-column flow</span>
+                <span>Clean reading layout</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                <span>Standard headings</span>
+                <span>Clear section titles</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                <span>UK Right to Work</span>
+                <span>UK Work eligibility</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                <span>Verified vouch ready</span>
+                <span>Reference ready</span>
               </div>
             </div>
 
@@ -1363,19 +1405,19 @@ ${education}
                 onClick={onNavigateToScanner}
                 className="w-full pt-2.5 mt-1 border-t border-slate-100 dark:border-slate-800 text-[11px] text-blue-600 dark:text-blue-400 font-semibold hover:underline flex items-center justify-between"
               >
-                <span>Have an existing CV? Test on ATS Scanner</span>
+                <span>Have an existing CV? Check it for errors</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
 
-          {/* Live Document Preview Box with 3 Tabs */}
+          {/* Live Document Preview Box with Tabs */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden flex flex-col">
             <div className="bg-slate-100 dark:bg-slate-800 px-4 py-2.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
               <div className="flex items-center gap-2">
                 <Eye className="w-4 h-4 text-blue-600" />
                 <span className="font-bold text-slate-800 dark:text-slate-200">
-                  {previewMode === 'web_dossier' ? "Interactive Web Dossier" : "A4 Document Preview"}
+                  {previewMode === 'web_dossier' ? "Online CV Link Preview" : "A4 Document Preview"}
                 </span>
               </div>
 
@@ -1391,7 +1433,7 @@ ${education}
                   className={`px-2 py-0.5 rounded transition-all flex items-center gap-1 ${previewMode === 'ats_machine' ? "bg-emerald-600 text-white font-bold" : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"}`}
                 >
                   <Terminal className="w-2.5 h-2.5" />
-                  ATS Machine
+                  Recruiter View
                 </button>
                 <button
                   onClick={() => setPreviewMode('plain_text')}
@@ -1405,7 +1447,7 @@ ${education}
                     className={`px-2 py-0.5 rounded flex items-center gap-1 transition-all ${previewMode === 'web_dossier' ? "bg-blue-600 text-white font-bold" : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"}`}
                   >
                     <Globe className="w-2.5 h-2.5" />
-                    Web Dossier
+                    Online CV
                   </button>
                 )}
               </div>
@@ -1435,13 +1477,13 @@ ${education}
                 </div>
               </div>
             ) : previewMode === 'ats_machine' ? (
-              /* Cold ATS Machine Lens Simulator */
+              /* Recruiter Software View Simulator */
               <div className={`p-4 font-mono text-xs flex flex-col max-h-[520px] overflow-y-auto transition-colors ${ATS_SKINS[atsSkin].containerClass}`}>
                 <div className={`p-2.5 rounded-xl border mb-3 flex flex-wrap items-center justify-between gap-2 ${ATS_SKINS[atsSkin].headerClass}`}>
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
                     <span className={`text-[11px] font-bold uppercase tracking-wider ${ATS_SKINS[atsSkin].accentTextClass}`}>
-                      {ATS_SKINS[atsSkin].name} Lens
+                      {ATS_SKINS[atsSkin].name} Screening View
                     </span>
                   </div>
 
@@ -1464,8 +1506,8 @@ ${education}
                 </div>
 
                 <div className="text-[10px] text-emerald-400/80 mb-2 flex items-center justify-between">
-                  <span>STATUS: 100% SINGLE-COLUMN PARSER SAFE</span>
-                  <span>LOST CHARS: 0</span>
+                  <span>STATUS: 100% CLEAN &amp; READABLE BY EMPLOYER SOFTWARE</span>
+                  <span>LOST TEXT: 0</span>
                 </div>
 
                 <div className="space-y-1.5 overflow-x-auto">
@@ -1577,21 +1619,21 @@ ${education}
                 className="w-full py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-sm flex items-center justify-center gap-1.5"
               >
                 <Download className="w-4 h-4" />
-                {isDownloading ? "Compiling PDF..." : "Download Clean ATS PDF"}
+                {isDownloading ? "Creating PDF..." : "Download Free A4 PDF"}
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Fullscreen Interactive Web Resume Dossier Modal */}
+      {/* Fullscreen Interactive Web Resume Modal */}
       {showFullscreenModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex flex-col justify-start overflow-y-auto">
           <div className="sticky top-0 z-40 bg-slate-900 border-b border-slate-800 px-6 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="text-xs font-bold text-white flex items-center gap-1.5">
                 <Globe className="w-4 h-4 text-blue-400" />
-                Live Candidate Web Dossier: <code className="text-blue-300 font-mono">{wildcardUrl}</code>
+                Your Online CV: <code className="text-blue-300 font-mono">{wildcardUrl}</code>
               </span>
               <button
                 onClick={copyWildcard}

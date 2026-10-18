@@ -38,12 +38,12 @@ export function Navbar({
   const auth = useAppAuth();
 
   return (
-    <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors">
-      <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
-        <div className="flex items-center justify-between h-16 gap-4">
+    <header className="w-full max-w-full sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors">
+      <div className="w-full max-w-full min-w-0 px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 gap-2 sm:gap-4 min-w-0">
           {/* Logo */}
-          <div className="flex items-center gap-6 cursor-pointer" onClick={() => { setActiveToolId('cv-builder'); setActiveSection('career'); }}>
-            <Logo className="w-8 h-8" />
+          <div className="flex items-center gap-2 sm:gap-6 cursor-pointer shrink-0" onClick={() => { setActiveToolId('cv-builder'); setActiveSection('career'); }}>
+            <Logo className="w-7 h-7 sm:w-8 h-8" />
           </div>
 
           {/* Section Switcher Tabs */}
@@ -91,24 +91,47 @@ export function Navbar({
               />
             </div>
 
-            {/* User Auth Status Pill */}
-            {auth.isConfigured ? (
-              auth.isSignedIn ? (
-                <UserButton afterSignOutUrl="/" />
-              ) : (
-                <SignInButton mode="modal">
-                  <button className="px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-xs">
-                    Sign In
-                  </button>
-                </SignInButton>
-              )
-            ) : (
-              <div 
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-medium"
-                title="Candidate Session Active"
+            {/* User Auth Status or Sign In Button */}
+            {auth.isSignedIn && auth.user ? (
+              <button
+                type="button"
+                onClick={auth.openProfileModal}
+                className="flex items-center gap-2 p-1 sm:px-2.5 sm:py-1 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium transition-all cursor-pointer shadow-2xs"
+                title="View Account"
               >
-                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                <span className="hidden lg:inline">Alex Turner (Candidate)</span>
+                {auth.user.avatarUrl ? (
+                  <img 
+                    src={auth.user.avatarUrl} 
+                    alt={auth.user.name} 
+                    className="w-5 h-5 rounded-lg object-cover ring-1 ring-blue-500/40"
+                  />
+                ) : (
+                  <div className="w-5 h-5 rounded-lg bg-blue-600 text-white font-bold text-[10px] flex items-center justify-center">
+                    {auth.user.name.charAt(0)}
+                  </div>
+                )}
+                <span className="hidden sm:inline font-bold text-slate-900 dark:text-white truncate max-w-[120px]">
+                  {auth.user.name.split(' ')[0]}
+                </span>
+                <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+              </button>
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => auth.openAuthModal('signin')}
+                  className="px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white transition-all shadow-xs flex items-center gap-1 cursor-pointer"
+                >
+                  <Key className="w-3 h-3" />
+                  <span>Sign In</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => auth.openAuthModal('signup')}
+                  className="hidden sm:flex px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-all cursor-pointer"
+                >
+                  Register
+                </button>
               </div>
             )}
 

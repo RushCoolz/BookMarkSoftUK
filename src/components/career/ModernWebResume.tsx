@@ -32,7 +32,8 @@ import {
   Search,
   Sun,
   Moon,
-  Palette
+  Palette,
+  GraduationCap
 } from "lucide-react";
 import { generateCleanAtsCvPdf } from "../../services/pdfGenerator";
 import { DOSSIER_THEMES, DossierThemeId, DossierFontStyle } from "../../types/theme";
@@ -118,7 +119,14 @@ export function ModernWebResume({ candidateData, onDownloadPdf, isStandalone = f
     if (candidateData.fontStyle) setActiveFont(candidateData.fontStyle);
   }, [candidateData.fontStyle]);
 
-  const currentTheme = DOSSIER_THEMES[activeTheme] || DOSSIER_THEMES.sapphire;
+  const baseTheme = DOSSIER_THEMES[activeTheme] || DOSSIER_THEMES.sapphire;
+  const accentColor = candidateData.customAccentColor || baseTheme.accentHex;
+  const currentTheme = candidateData.customAccentColor
+    ? {
+        ...baseTheme,
+        accentHex: candidateData.customAccentColor,
+      }
+    : baseTheme;
 
   const [skillCategoryFilter, setSkillCategoryFilter] = useState<'all' | 'languages' | 'frameworks' | 'cloud'>('all');
   const [expandedSkills, setExpandedSkills] = useState<Record<string, boolean>>({
@@ -350,7 +358,7 @@ export function ModernWebResume({ candidateData, onDownloadPdf, isStandalone = f
             <button
               onClick={copyDossierUrl}
               className="p-1 text-slate-400 hover:text-blue-600 transition-colors"
-              title="Copy personal wildcard URL"
+              title="Copy your online CV link"
             >
               {copiedUrl ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
             </button>
@@ -364,7 +372,7 @@ export function ModernWebResume({ candidateData, onDownloadPdf, isStandalone = f
                 type="button"
                 onClick={() => setShowThemePicker(!showThemePicker)}
                 className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
-                title="Select Dossier Color Theme & Font"
+                title="Select Color Theme & Font"
               >
                 <div 
                   className="w-3 h-3 rounded-full border border-white/50 shadow-xs shrink-0" 
@@ -380,10 +388,10 @@ export function ModernWebResume({ candidateData, onDownloadPdf, isStandalone = f
                     <div>
                       <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                         <Palette className="w-3.5 h-3.5 text-blue-500" />
-                        Dossier Color Palettes
+                        Color Palettes
                       </span>
                       <span className="text-[10px] text-slate-500 dark:text-slate-400">
-                        Select a personality theme for your candidate dossier
+                        Select a color theme for your online CV
                       </span>
                     </div>
                     <button
@@ -576,7 +584,8 @@ export function ModernWebResume({ candidateData, onDownloadPdf, isStandalone = f
                   href={`https://${candidateData.linkedin.replace('https://', '')}`} 
                   target="_blank" 
                   rel="noopener noreferrer nofollow"
-                  className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 hover:underline"
+                  className="flex items-center gap-1.5 hover:underline"
+                  style={{ color: accentColor }}
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                   LinkedIn
@@ -587,7 +596,7 @@ export function ModernWebResume({ candidateData, onDownloadPdf, isStandalone = f
 
           {/* Executive Summary */}
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+            <h3 className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: accentColor }}>
               Executive Overview
             </h3>
             <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-normal">
@@ -634,16 +643,19 @@ export function ModernWebResume({ candidateData, onDownloadPdf, isStandalone = f
           </div>
         )}
 
-        {/* Interactive Expandable Skills Section (In-Place Proof-of-Work Expansion) */}
-        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+        {/* Interactive Expandable Skills Section */}
+        <section 
+          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6"
+          style={{ borderTop: `4px solid ${accentColor}` }}
+        >
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div>
               <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Cpu className="w-5 h-5 text-blue-500" />
-                Interactive Technical Competencies &amp; Proof-of-Work
+                <Cpu className="w-5 h-5 shrink-0" style={{ color: accentColor }} />
+                Technical Competencies &amp; Experience
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Click any competency tile to expand its architectural context, production years, and proven system deployments directly in place.
+                Click any competency tile to expand context, years of production experience, and proven systems.
               </p>
             </div>
             
@@ -736,9 +748,14 @@ export function ModernWebResume({ candidateData, onDownloadPdf, isStandalone = f
                     key={skill.name}
                     className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
                       isExpanded
-                        ? `${currentTheme.cardHighlightClass} shadow-sm ring-1 ${currentTheme.ringClass} md:col-span-2 lg:col-span-3`
+                        ? `shadow-sm ring-1 md:col-span-2 lg:col-span-3`
                         : "bg-slate-50/60 dark:bg-slate-950/40 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-slate-900"
                     }`}
+                    style={isExpanded ? { 
+                      borderColor: `${accentColor}50`, 
+                      borderLeft: `4px solid ${accentColor}`,
+                      backgroundColor: isDarkTheme ? `${accentColor}10` : `${accentColor}08`
+                    } : undefined}
                   >
                     {/* Card Header (Always Visible, Clickable in Place) */}
                     <div
@@ -751,7 +768,7 @@ export function ModernWebResume({ candidateData, onDownloadPdf, isStandalone = f
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div 
                           className={`w-2.5 h-2.5 rounded-full shrink-0 ${isExpanded ? "ring-2" : "bg-slate-300 dark:bg-slate-700"}`} 
-                          style={isExpanded ? { backgroundColor: currentTheme.accentHex } : undefined}
+                          style={isExpanded ? { backgroundColor: accentColor } : undefined}
                         />
                         <div className="min-w-0">
                           <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white truncate block transition-colors">
@@ -767,11 +784,13 @@ export function ModernWebResume({ candidateData, onDownloadPdf, isStandalone = f
                         <span className="hidden sm:inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                           {skill.yearsExperience}
                         </span>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
-                          skill.proficiency === 'Expert' 
-                            ? "bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200" 
-                            : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
-                        }`}>
+                        <span 
+                          className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase"
+                          style={skill.proficiency === 'Expert' ? {
+                            backgroundColor: `${accentColor}20`,
+                            color: accentColor
+                          } : {}}
+                        >
                           {skill.proficiency}
                         </span>
                         <button
@@ -780,7 +799,8 @@ export function ModernWebResume({ candidateData, onDownloadPdf, isStandalone = f
                             e.stopPropagation();
                             toggleSkill(skill.name);
                           }}
-                          className={`p-1 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-transform ${isExpanded ? "rotate-180 text-blue-600" : ""}`}
+                          className={`p-1 rounded-lg text-slate-400 hover:opacity-80 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                          style={isExpanded ? { color: accentColor } : undefined}
                           title={isExpanded ? "Collapse competency details" : "Expand proof-of-work in place"}
                         >
                           <ChevronDown className="w-4 h-4" />
@@ -788,11 +808,14 @@ export function ModernWebResume({ candidateData, onDownloadPdf, isStandalone = f
                       </div>
                     </div>
 
-                    {/* In-Place Expanded Proof-of-Work Content (Directly in this card space) */}
+                    {/* In-Place Expanded Proof-of-Work Content */}
                     {isExpanded && (
-                      <div className="px-4 pb-4 pt-1 border-t border-blue-200/60 dark:border-blue-900/40 space-y-3 animate-fadeIn text-xs">
+                      <div 
+                        className="px-4 pb-4 pt-1 border-t space-y-3 animate-fadeIn text-xs"
+                        style={{ borderColor: `${accentColor}30` }}
+                      >
                         <div className="pt-2">
-                          <span className="block text-[10px] font-bold uppercase text-blue-800 dark:text-blue-300 mb-1">
+                          <span className="block text-[10px] font-bold uppercase mb-1" style={{ color: accentColor }}>
                             Production Impact &amp; Architecture Context:
                           </span>
                           <p className="text-slate-700 dark:text-slate-300 leading-relaxed font-normal">
@@ -801,7 +824,10 @@ export function ModernWebResume({ candidateData, onDownloadPdf, isStandalone = f
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-                          <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-blue-100 dark:border-blue-900/30">
+                          <div 
+                            className="p-3 rounded-xl bg-white dark:bg-slate-900 border"
+                            style={{ borderColor: `${accentColor}30` }}
+                          >
                             <span className="block text-[10px] font-bold uppercase text-slate-400 mb-1">
                               Where Demonstrated in UK Production:
                             </span>
@@ -810,7 +836,10 @@ export function ModernWebResume({ candidateData, onDownloadPdf, isStandalone = f
                             </span>
                           </div>
 
-                          <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-blue-100 dark:border-blue-900/30">
+                          <div 
+                            className="p-3 rounded-xl bg-white dark:bg-slate-900 border"
+                            style={{ borderColor: `${accentColor}30` }}
+                          >
                             <span className="block text-[10px] font-bold uppercase text-slate-400 mb-1">
                               Complementary Stack &amp; Design Patterns:
                             </span>
@@ -834,7 +863,8 @@ export function ModernWebResume({ candidateData, onDownloadPdf, isStandalone = f
                               e.stopPropagation();
                               toggleSkill(skill.name);
                             }}
-                            className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
+                            className="text-[11px] font-bold hover:underline flex items-center gap-1 cursor-pointer"
+                            style={{ color: accentColor }}
                           >
                             <ChevronUp className="w-3.5 h-3.5" />
                             <span>Collapse in place</span>
@@ -849,11 +879,14 @@ export function ModernWebResume({ candidateData, onDownloadPdf, isStandalone = f
         </section>
 
         {/* Expandable Project Descriptions & Architecture Deep Dives */}
-        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+        <section 
+          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6"
+          style={{ borderTop: `4px solid ${accentColor}` }}
+        >
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div>
               <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Code2 className="w-5 h-5 text-indigo-500" />
+                <Code2 className="w-5 h-5 shrink-0" style={{ color: accentColor }} />
                 Featured Engineering Projects &amp; Architecture Deep Dives
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -881,6 +914,7 @@ export function ModernWebResume({ candidateData, onDownloadPdf, isStandalone = f
                 <div 
                   key={proj.id} 
                   className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 p-5 space-y-4 transition-all"
+                  style={isExpanded ? { borderLeft: `3px solid ${accentColor}` } : {}}
                 >
                   <div 
                     onClick={() => toggleProject(proj.id)}
@@ -888,7 +922,7 @@ export function ModernWebResume({ candidateData, onDownloadPdf, isStandalone = f
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-base text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors">
+                        <h3 className="font-bold text-base text-slate-900 dark:text-white transition-colors">
                           {proj.title}
                         </h3>
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200">
@@ -907,7 +941,14 @@ export function ModernWebResume({ candidateData, onDownloadPdf, isStandalone = f
                           e.stopPropagation();
                           toggleProject(proj.id);
                         }}
-                        className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 flex items-center gap-1.5 transition-all shadow-xs"
+                        className="px-3 py-1.5 rounded-xl text-xs font-bold border flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                        style={isExpanded ? {
+                          backgroundColor: accentColor,
+                          borderColor: accentColor,
+                          color: '#ffffff'
+                        } : {
+                          borderColor: `${accentColor}40`
+                        }}
                       >
                         <span>{isExpanded ? "Collapse Deep Dive" : "Architecture Deep Dive"}</span>
                         {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -942,47 +983,55 @@ export function ModernWebResume({ candidateData, onDownloadPdf, isStandalone = f
 
                   {/* Expanded Architecture Deep Dive Section */}
                   {isExpanded && proj.deepDive && (
-                    <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800 space-y-3.5 text-xs bg-white dark:bg-slate-900 p-4 rounded-xl border border-blue-100 dark:border-blue-900/30 animate-fadeIn">
-                      <div className="flex items-center gap-2 font-bold text-blue-900 dark:text-blue-300">
-                        <Layers className="w-4 h-4 text-blue-500" />
+                    <div 
+                      className="mt-4 pt-4 space-y-3.5 text-xs bg-white dark:bg-slate-900 p-4 rounded-xl border animate-fadeIn"
+                      style={{ 
+                        borderColor: `${accentColor}35`,
+                        borderLeft: `4px solid ${accentColor}`,
+                        backgroundColor: isDarkTheme ? `${accentColor}0a` : `${accentColor}06`
+                      }}
+                    >
+                      <div className="flex items-center gap-2 font-bold" style={{ color: accentColor }}>
+                        <Layers className="w-4 h-4 shrink-0" style={{ color: accentColor }} />
                         <span>System Architecture &amp; Engineering Decisions</span>
                       </div>
 
                       <div className="space-y-2">
                         {proj.deepDive.problemStatement && (
                           <div>
-                            <strong className="text-slate-900 dark:text-white block text-[11px] mb-0.5">Problem &amp; Scale Contention:</strong>
+                            <strong className="block text-[11px] mb-0.5" style={{ color: accentColor }}>Problem &amp; Scale Contention:</strong>
                             <p className="text-slate-600 dark:text-slate-300 leading-relaxed">{proj.deepDive.problemStatement}</p>
                           </div>
                         )}
                         {proj.deepDive.architectureSolution && (
                           <div>
-                            <strong className="text-slate-900 dark:text-white block text-[11px] mb-0.5">Architectural Solution:</strong>
+                            <strong className="block text-[11px] mb-0.5" style={{ color: accentColor }}>Architectural Solution:</strong>
                             <p className="text-slate-600 dark:text-slate-300 leading-relaxed">{proj.deepDive.architectureSolution}</p>
                           </div>
                         )}
                         {proj.deepDive.keyTradeoffs && (
                           <div>
-                            <strong className="text-slate-900 dark:text-white block text-[11px] mb-0.5">Technical Trade-Offs Considered:</strong>
+                            <strong className="block text-[11px] mb-0.5" style={{ color: accentColor }}>Technical Trade-Offs Considered:</strong>
                             <p className="text-slate-600 dark:text-slate-300 leading-relaxed">{proj.deepDive.keyTradeoffs}</p>
                           </div>
                         )}
                         {proj.deepDive.measurableImpact && (
                           <div>
-                            <strong className="text-slate-900 dark:text-white block text-[11px] mb-0.5">Measurable Production Outcomes:</strong>
+                            <strong className="block text-[11px] mb-0.5" style={{ color: accentColor }}>Measurable Production Outcomes:</strong>
                             <p className="text-slate-600 dark:text-slate-300 leading-relaxed">{proj.deepDive.measurableImpact}</p>
                           </div>
                         )}
                       </div>
 
-                      {/* Outbound Link Safety (rel="noopener noreferrer nofollow") */}
+                      {/* Outbound Link Safety */}
                       <div className="pt-2 flex flex-wrap items-center gap-3 border-t border-slate-100 dark:border-slate-800">
                         {proj.demoUrl && (
                           <a
                             href={proj.demoUrl}
                             target="_blank"
                             rel="noopener noreferrer nofollow"
-                            className="inline-flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-semibold hover:underline"
+                            className="inline-flex items-center gap-1.5 font-semibold hover:underline"
+                            style={{ color: accentColor }}
                           >
                             <span>Live Product Demo</span>
                             <ExternalLink className="w-3.5 h-3.5" />

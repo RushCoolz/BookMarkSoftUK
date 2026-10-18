@@ -164,12 +164,11 @@ BSc (Hons) Computer Science | First Class Honours | University of Manchester (20
             100% Free Heroic Feature — No Paywall Ever
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-            ATS X-Ray: See What the Recruiter's Robot Actually Reads
+            CV Screening Checker: See How Job Applications Read Your CV
           </h1>
           <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-            Most job seekers design stunning two-column CVs in Canva, then wonder why they never get called back. 
-            Corporate Applicant Tracking Systems (Workday, Taleo, Greenhouse) don't have eyes: they flatten PDFs horizontally, 
-            scrambling your skills with your dates and discarding your best achievements into the digital void.
+            Many CVs designed with multiple columns or sidebars get scrambled when processed by online job application systems. 
+            Test your CV here to see if your text extracts cleanly, ensuring hiring managers never miss your best experience.
           </p>
 
           <div className="flex flex-wrap items-center gap-3 pt-2">
@@ -178,14 +177,14 @@ BSc (Hons) Computer Science | First Class Honours | University of Manchester (20
               className="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/40 transition-all flex items-center gap-1.5"
             >
               <AlertTriangle className="w-4 h-4 text-amber-400" />
-              Demo: Scrambled Canva CV
+              Example: Problematic 2-Column CV
             </button>
             <button
               onClick={loadCleanSingleColumn}
               className="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 transition-all flex items-center gap-1.5"
             >
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              Demo: 94% Clean ATS Layout
+              Example: Clean Single-Column CV
             </button>
             {onNavigateToBuilder && (
               <button
@@ -193,7 +192,7 @@ BSc (Hons) Computer Science | First Class Honours | University of Manchester (20
                 className="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-blue-600 hover:bg-blue-500 text-white transition-all shadow-md flex items-center gap-1.5"
               >
                 <FileText className="w-4 h-4" />
-                ATS CV Builder (Single-Column)
+                Open CV Builder
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             )}

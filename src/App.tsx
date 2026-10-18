@@ -71,6 +71,10 @@ import { CookieConsentBanner } from "./components/legal/CookieConsentBanner";
 import { AboutAndContactModal } from "./components/legal/AboutAndContactModal";
 import { AdBanner } from "./components/common/AdBanner";
 
+// User Authentication & Profiles
+import { AuthModal } from "./components/auth/AuthModal";
+import { UserProfileModal } from "./components/auth/UserProfileModal";
+
 export default function App() {
   const [activeSection, setActiveSection] = useState<'career' | 'utilities'>('career');
   const [activeToolId, setActiveToolId] = useState<string>('cv-builder');
@@ -103,16 +107,16 @@ export default function App() {
   }, [isDarkMode]);
 
   const careerTools = [
-    { id: "cv-builder", name: "ATS CV Builder", icon: FileEdit, badge: "Main • PDF", desc: "Build parse-guaranteed single-column CV & download PDF" },
-    { id: "ats-xray", name: "ATS Scanner (X-Ray)", icon: FileSearch, badge: "Scanner", desc: "Upload CV to see column scramble & lost text" },
-    { id: "tracking", name: "“Did They Read It?”", icon: Eye, badge: "Hero 2", desc: "Tailored links & section attention heatmap" },
-    { id: "vouch", name: "Vouch References", icon: ShieldCheck, badge: "Hero 3", desc: "Past managers verify claims in 1 click" },
-    { id: "cv-lab", name: "CV Lab (A/B Test)", icon: FlaskConical, badge: "Hero 4", desc: "Compare metric vs tech wording with honest signal" },
-    { id: "ghost-tracker", name: "Ghost Tracker", icon: Ghost, badge: "Hero 5", desc: "Notice silence & draft polite UK follow-up emails" },
-    { id: "job-gap", name: "Job-Ad Gap Analysis", icon: Search, badge: "Support", desc: "Evidence requirements without inventing experience" },
-    { id: "interview-kit", name: "Interview STAR Kit", icon: BookOpen, badge: "Support", desc: "Competency questions linked to CV achievements" },
-    { id: "offer-evaluator", name: "Offer Evaluator", icon: Scale, badge: "Support", desc: "Compare take-home pay, pension & commute side-by-side" },
-    { id: "right-to-work", name: "Right-to-Work & Privacy", icon: Shield, badge: "Support", desc: "UK visa thresholds, Blind mode & neurodivergent layouts" },
+    { id: "cv-builder", name: "Job-Ready CV Builder", icon: FileEdit, badge: "Free PDF", desc: "Build a clean CV guaranteed to pass employer screening software" },
+    { id: "ats-xray", name: "CV Scanner & Reviewer", icon: FileSearch, badge: "Checker", desc: "Check your existing CV for formatting errors and missing keywords" },
+    { id: "tracking", name: "Application View Tracker", icon: Eye, badge: "Popular", desc: "See when recruiters open and read your CV" },
+    { id: "vouch", name: "Manager Endorsements", icon: ShieldCheck, badge: "Verified", desc: "Ask former managers to confirm your experience with 1 click" },
+    { id: "cv-lab", name: "CV Version Comparison", icon: FlaskConical, badge: "Tool", desc: "Compare two versions of your CV to see which sounds stronger" },
+    { id: "ghost-tracker", name: "Follow-Up Tracker", icon: Ghost, badge: "Email", desc: "Track unanswered applications and get polite follow-up templates" },
+    { id: "job-gap", name: "Job Match & Skills Checker", icon: Search, badge: "Review", desc: "Compare your CV against any job advert to spot missing requirements" },
+    { id: "interview-kit", name: "Interview Prep Kit", icon: BookOpen, badge: "Guide", desc: "Practice common UK interview questions with structured answer examples" },
+    { id: "offer-evaluator", name: "Job Offer & Pay Comparison", icon: Scale, badge: "Compare", desc: "Compare salary, commute costs, and pension contributions between offers" },
+    { id: "right-to-work", name: "UK Work Eligibility Check", icon: Shield, badge: "Visa Info", desc: "Check UK right-to-work rules, visa requirements, and privacy options" },
   ];
 
   const utilityTools = [
@@ -139,7 +143,7 @@ export default function App() {
 
   return (
     <AppAuthProvider>
-      <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
+      <div className="w-full max-w-full min-h-screen flex flex-col overflow-x-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
         {/* Top Navbar */}
         <Navbar 
           activeSection={activeSection}
@@ -153,9 +157,9 @@ export default function App() {
         />
 
         {/* Main Container */}
-        <main className="flex-1 w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-6 space-y-6">
+        <main className="flex-1 w-full min-w-0 px-4 sm:px-6 lg:px-8 py-6 space-y-6">
           {/* Quick Tool Navigation Scroller */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          <div className="w-full max-w-full min-w-0 flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
             {filteredTools.map((tool) => {
               const Icon = tool.icon;
               const isActive = activeToolId === tool.id;
@@ -237,7 +241,7 @@ export default function App() {
 
         {/* Footer */}
         <footer className="mt-12 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-10 text-xs text-slate-500 dark:text-slate-400">
-          <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 space-y-6">
+          <div className="w-full px-4 sm:px-6 lg:px-8 space-y-6">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-2">
                 <Logo className="w-6 h-6" showBadge={false} />
@@ -343,6 +347,19 @@ export default function App() {
           onOpenPrivacyPolicy={() => setShowPrivacyPolicy(true)}
           forceOpen={forceOpenCookieSettings}
           onCloseForceOpen={() => setForceOpenCookieSettings(false)}
+        />
+
+        {/* User Authentication & Profile Dialogs */}
+        <AuthModal />
+        <UserProfileModal 
+          onNavigateToBuilder={() => {
+            setActiveSection('career');
+            setActiveToolId('cv-builder');
+          }}
+          onNavigateToTracking={() => {
+            setActiveSection('career');
+            setActiveToolId('tracking');
+          }}
         />
       </div>
     </AppAuthProvider>

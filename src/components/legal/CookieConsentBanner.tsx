@@ -78,7 +78,7 @@ export function CookieConsentBanner({ onOpenPrivacyPolicy, forceOpen = false, on
 
   return (
     <div 
-      className="fixed bottom-4 left-4 right-4 sm:left-6 sm:right-auto sm:max-w-xl z-50 animate-slideUp"
+      className="fixed bottom-4 left-4 right-4 sm:left-6 sm:right-auto sm:max-w-lg z-50 max-w-[calc(100vw-2rem)]"
       role="region"
       aria-label="Cookie consent banner"
     >

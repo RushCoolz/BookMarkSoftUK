@@ -1,61 +1,35 @@
-import React, { createContext, useContext, ReactNode } from 'react';
-import { ClerkProvider as RealClerkProvider, SignInButton, SignUpButton, UserButton, useUser, useAuth } from '@clerk/clerk-react';
+import React, { ReactNode } from 'react';
+import { ClerkProvider as RealClerkProvider, SignInButton as ClerkSignInButton, UserButton as ClerkUserButton } from '@clerk/clerk-react';
+import { AuthProvider, useAuth } from './authContext';
 
 const clerkKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string | undefined;
 
-interface AuthStatus {
-  isConfigured: boolean;
-  isSignedIn: boolean;
-  userId?: string;
-  email?: string;
-}
-
-const FallbackAuthContext = createContext<AuthStatus>({
-  isConfigured: false,
-  isSignedIn: true, // Demo candidate Alex Turner
-  userId: 'user_alex_turner_demo',
-  email: 'alex.turner@example.co.uk',
-});
-
 export function useAppAuth() {
-  if (clerkKey && clerkKey.startsWith('pk_')) {
-    try {
-      const { isSignedIn, userId } = useAuth();
-      const { user } = useUser();
-      return {
-        isConfigured: true,
-        isSignedIn: Boolean(isSignedIn),
-        userId: userId || undefined,
-        email: user?.primaryEmailAddress?.emailAddress,
-        user,
-      };
-    } catch {
-      return useContext(FallbackAuthContext);
-    }
-  }
-  return useContext(FallbackAuthContext);
+  const auth = useAuth();
+  return {
+    isConfigured: Boolean(clerkKey && clerkKey.startsWith('pk_')),
+    isSignedIn: auth.isSignedIn,
+    userId: auth.user?.id,
+    email: auth.user?.email,
+    user: auth.user,
+    signIn: auth.signIn,
+    signUp: auth.signUp,
+    signOut: auth.signOut,
+    openAuthModal: auth.openAuthModal,
+    openProfileModal: auth.openProfileModal,
+  };
 }
 
 export function AppAuthProvider({ children }: { children: ReactNode }) {
   if (clerkKey && clerkKey.startsWith('pk_')) {
     return (
       <RealClerkProvider publishableKey={clerkKey}>
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </RealClerkProvider>
     );
   }
 
-  // Fallback demo state
-  return (
-    <FallbackAuthContext.Provider value={{
-      isConfigured: false,
-      isSignedIn: true,
-      userId: 'user_alex_turner_demo',
-      email: 'alex.turner@example.co.uk',
-    }}>
-      {children}
-    </FallbackAuthContext.Provider>
-  );
+  return <AuthProvider>{children}</AuthProvider>;
 }
 
-export { SignInButton, SignUpButton, UserButton };
+export { ClerkSignInButton as SignInButton, ClerkUserButton as UserButton };
