@@ -3,88 +3,96 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
-  FileSearch, 
-  Eye, 
-  ShieldCheck, 
-  FlaskConical, 
-  Ghost, 
-  Search, 
-  BookOpen, 
-  Scale, 
-  Shield, 
-  Calculator, 
-  Briefcase, 
-  Home, 
-  MapPin, 
-  Leaf, 
-  Zap, 
-  Calendar, 
-  GraduationCap, 
-  FileCode, 
-  Percent, 
-  Train, 
-  Wrench, 
-  Sparkles,
-  ExternalLink,
-  Cloud,
-  Database,
-  Key,
-  FileEdit
-} from "lucide-react";
+  CloudSun, 
+  AlertTriangle,
+  Loader2
+} from 'lucide-react';
 
-import { AppAuthProvider } from "./services/clerkProvider";
-import { Navbar } from "./components/common/Navbar";
-import { Logo } from "./components/common/Logo";
+import { 
+  WeatherData, 
+  LocationData, 
+  TempUnit, 
+  SpeedUnit, 
+  SevereAlert,
+  HourlyForecastItem 
+} from './types/weather';
+import { 
+  DEFAULT_LOCATION, 
+  fetchFullWeather, 
+  deriveSevereAlerts, 
+  deriveActivitySuitabilities, 
+  deriveTransitImpact, 
+  deriveWardrobeRecommendations,
+  decodeWmoCode
+} from './services/weatherService';
+import { soundscape } from './services/soundscapeService';
 
-// Career Suite Components
-import { AtsXray } from "./components/career/AtsXray";
-import { CvBuilder } from "./components/career/CvBuilder";
-import { ApplicationTracking } from "./components/career/ApplicationTracking";
-import { VouchVerification } from "./components/career/VouchVerification";
-import { CvLab } from "./components/career/CvLab";
-import { GhostTracker } from "./components/career/GhostTracker";
-import { JobAdGapAnalysis } from "./components/career/JobAdGapAnalysis";
-import { InterviewKit } from "./components/career/InterviewKit";
-import { OfferEvaluator } from "./components/career/OfferEvaluator";
-import { RightToWorkBlock } from "./components/career/RightToWorkBlock";
+// Weather Components
+import { WeatherHeader, WeatherSectionTab } from './components/weather/WeatherHeader';
+import { AtmosphericCanvas } from './components/weather/AtmosphericCanvas';
+import { HyperlocalSearch } from './components/weather/HyperlocalSearch';
+import { CurrentHero } from './components/weather/CurrentHero';
+import { HourlyForecastSlider } from './components/weather/HourlyForecastSlider';
+import { HourlyCurveChart } from './components/weather/HourlyCurveChart';
+import { DailyForecastOutlook } from './components/weather/DailyForecastOutlook';
+import { LiveRadarMap } from './components/weather/LiveRadarMap';
+import { PollenAndAirQuality } from './components/weather/PollenAndAirQuality';
+import { TransitAndCommuteFeed } from './components/weather/TransitAndCommuteFeed';
+import { OutdoorActivityPlanner } from './components/weather/OutdoorActivityPlanner';
+import { SmartWardrobePrompts } from './components/weather/SmartWardrobePrompts';
+import { SevereWeatherAlertsModal } from './components/weather/SevereWeatherAlertsModal';
+import { PageNavigationBanner } from './components/weather/PageNavigationBanner';
+import { PageLaunchersGrid } from './components/weather/PageLaunchersGrid';
+import { FloatingPageDock } from './components/weather/FloatingPageDock';
+import { WeatherThemeProvider, useWeatherTheme } from './context/WeatherThemeContext';
+import { ThemeSelectorModal } from './components/weather/ThemeSelectorModal';
+import { ThemeCardArtWrapper } from './components/weather/ThemeCardArtWrapper';
+import { WorldPostcardDeck } from './components/weather/WorldPostcardDeck';
+import { TimeTravelScrubber } from './components/weather/TimeTravelScrubber';
+import { CelestialObservatory } from './components/weather/CelestialObservatory';
+import { MicroClimateStudio } from './components/weather/MicroClimateStudio';
+import { SoundscapeMixerModal } from './components/weather/SoundscapeMixerModal';
+import { ZenSanctuaryOverlay } from './components/weather/ZenSanctuaryOverlay';
 
-// UK Utility Suite Components
-import { TakeHomePayCalc } from "./components/utilities/TakeHomePayCalc";
-import { SelfEmployedTaxCalc } from "./components/utilities/SelfEmployedTaxCalc";
-import { StampDutyCalc } from "./components/utilities/StampDutyCalc";
-import { PostcodeLookup } from "./components/utilities/PostcodeLookup";
-import { CarbonIntensityLive } from "./components/utilities/CarbonIntensityLive";
-import { OfgemApplianceCalc } from "./components/utilities/OfgemApplianceCalc";
-import { BankHolidaysExplorer } from "./components/utilities/BankHolidaysExplorer";
-import { StudentLoanCalc } from "./components/utilities/StudentLoanCalc";
-import { TaxCodeChecker } from "./components/utilities/TaxCodeChecker";
-import { VatCalculator } from "./components/utilities/VatCalculator";
-import { RailDelayRepayCalc } from "./components/utilities/RailDelayRepayCalc";
-import { TextAndSecurityTools } from "./components/utilities/TextAndSecurityTools";
+function WeatherAppContent() {
+  const [currentLocation, setCurrentLocation] = useState<LocationData>(() => {
+    try {
+      const saved = localStorage.getItem('aether_saved_loc');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return DEFAULT_LOCATION;
+  });
 
-// Legal & Google AdSense Compliance Components
-import { PrivacyPolicyModal } from "./components/legal/PrivacyPolicyModal";
-import { TermsOfServiceModal } from "./components/legal/TermsOfServiceModal";
-import { CookieConsentBanner } from "./components/legal/CookieConsentBanner";
-import { AboutAndContactModal } from "./components/legal/AboutAndContactModal";
-import { AdBanner } from "./components/common/AdBanner";
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-// User Authentication & Profiles
-import { AuthModal } from "./components/auth/AuthModal";
-import { UserProfileModal } from "./components/auth/UserProfileModal";
+  // 24-Hour Time-Travel Scrubber Index (0 = Live Now, 1..23 = future hours)
+  const [scrubIndex, setScrubIndex] = useState<number>(0);
 
-export default function App() {
-  const [activeSection, setActiveSection] = useState<'career' | 'utilities'>('career');
-  const [activeToolId, setActiveToolId] = useState<string>('cv-builder');
-  const [searchQuery, setSearchQuery] = useState("");
-  
-  // Legal & Consent Dialog States
-  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
-  const [showTerms, setShowTerms] = useState(false);
-  const [showAboutContact, setShowAboutContact] = useState(false);
-  const [forceOpenCookieSettings, setForceOpenCookieSettings] = useState(false);
+  // Zen Sanctuary Fullscreen Mode & Soundscape Mixer Modal
+  const [isZenMode, setIsZenMode] = useState<boolean>(false);
+  const [isSoundMixerOpen, setIsSoundMixerOpen] = useState<boolean>(false);
+
+  // Preference Settings
+  const [tempUnit, setTempUnit] = useState<TempUnit>(() => {
+    try {
+      return (localStorage.getItem('aether_temp_unit') as TempUnit) || 'celsius';
+    } catch {
+      return 'celsius';
+    }
+  });
+
+  const [speedUnit, setSpeedUnit] = useState<SpeedUnit>(() => {
+    try {
+      return (localStorage.getItem('aether_speed_unit') as SpeedUnit) || 'mph';
+    } catch {
+      return 'mph';
+    }
+  });
 
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
@@ -92,10 +100,124 @@ export default function App() {
       if (saved) return saved === 'dark';
       return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     }
-    return false;
+    return true;
   });
 
-  // Apply dark mode class to html document and persist preference
+  // URL Hash Based Multi-Page Navigation
+  const getTabFromHash = (): WeatherSectionTab => {
+    if (typeof window === 'undefined') return 'overview';
+    const hash = window.location.hash.replace('#', '').toLowerCase();
+    if (hash === 'radar') return 'radar';
+    if (hash === 'celestial' || hash === 'astronomy') return 'celestial';
+    if (hash === 'microclimate' || hash === 'botanical') return 'microclimate';
+    if (hash === 'air-pollen' || hash === 'pollen') return 'air-pollen';
+    if (hash === 'commute' || hash === 'transit') return 'commute';
+    if (hash === 'outdoor' || hash === 'activities') return 'outdoor';
+    if (hash === 'wardrobe' || hash === 'clothing') return 'wardrobe';
+    return 'overview';
+  };
+
+  const [activeTab, setActiveTabState] = useState<WeatherSectionTab>(getTabFromHash);
+
+  const navigateToPage = (tab: WeatherSectionTab) => {
+    setActiveTabState(tab);
+    const hash = tab === 'overview' ? 'forecast' : tab;
+    if (window.location.hash !== `#${hash}`) {
+      window.location.hash = hash;
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      setActiveTabState(getTabFromHash());
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  // Selected hour for interactive timeline exploration
+  const [selectedHour, setSelectedHour] = useState<HourlyForecastItem | undefined>(undefined);
+
+  // Severe Alert Dialog
+  const [showAlertModal, setShowAlertModal] = useState<boolean>(false);
+
+  // Atmospheric Soundscape State
+  const [isSoundPlaying, setIsSoundPlaying] = useState<boolean>(false);
+  const [soundLevels, setSoundLevels] = useState<number[]>([0.2, 0.4, 0.3, 0.5]);
+
+  useEffect(() => {
+    soundscape.setVisualizerCallback((levels) => {
+      setSoundLevels(levels);
+    });
+  }, []);
+
+  // Compute Effective Weather when user scrubs the 24-Hour Time-Travel Scrubber
+  const effectiveWeather: WeatherData | null = useMemo(() => {
+    if (!weather) return null;
+    if (scrubIndex === 0 || !weather.hourly || weather.hourly.length === 0) {
+      return weather;
+    }
+    const currentIsoPrefix = weather.current.time.slice(0, 13);
+    const startIdx = Math.max(
+      0,
+      weather.hourly.findIndex((h) => h.time.startsWith(currentIsoPrefix))
+    );
+    const targetHour = weather.hourly[Math.min(weather.hourly.length - 1, startIdx + scrubIndex)];
+    if (!targetHour) return weather;
+
+    const hourPart = targetHour.time.includes('T') ? targetHour.time.split('T')[1] : targetHour.time;
+    const hourNum = parseInt(hourPart.split(':')[0], 10) || 12;
+    const isDayScrubbed = hourNum >= 6 && hourNum < 20 ? 1 : 0;
+
+    return {
+      ...weather,
+      current: {
+        ...weather.current,
+        time: targetHour.time,
+        temperature: targetHour.temperature,
+        apparentTemperature: targetHour.apparentTemperature,
+        relativeHumidity: targetHour.relativeHumidity,
+        precipitation: targetHour.precipitation,
+        weatherCode: targetHour.weatherCode,
+        cloudCover: targetHour.cloudCover,
+        windSpeed: targetHour.windSpeed,
+        windDirection: targetHour.windDirection,
+        windGusts: targetHour.windGusts,
+        uvIndex: targetHour.uvIndex,
+        isDay: isDayScrubbed,
+      },
+    };
+  }, [weather, scrubIndex]);
+
+  const { theme, isAutoThemeSync, syncThemeWithWeather } = useWeatherTheme();
+
+  // Living Sky Auto-Theme Sync effect when weather or time-scrubber changes
+  useEffect(() => {
+    if (!effectiveWeather || !isAutoThemeSync) return;
+    syncThemeWithWeather({
+      weatherCode: effectiveWeather.current.weatherCode,
+      temperatureC: effectiveWeather.current.temperature,
+      isDay: effectiveWeather.current.isDay,
+      currentTimeIso: effectiveWeather.current.time,
+      sunriseIso: effectiveWeather.daily[0]?.sunrise,
+      sunsetIso: effectiveWeather.daily[0]?.sunset,
+      latitude: effectiveWeather.location.latitude,
+    });
+  }, [effectiveWeather, isAutoThemeSync, syncThemeWithWeather]);
+
+  const handleToggleSound = () => {
+    if (!effectiveWeather) return;
+    const wmo = decodeWmoCode(effectiveWeather.current.weatherCode, effectiveWeather.current.isDay);
+    const active = soundscape.toggle(
+      wmo.category,
+      effectiveWeather.current.precipitation,
+      effectiveWeather.current.windSpeed
+    );
+    setIsSoundPlaying(active);
+  };
+
+  // Dark mode effect
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
@@ -106,262 +228,408 @@ export default function App() {
     }
   }, [isDarkMode]);
 
-  const careerTools = [
-    { id: "cv-builder", name: "Job-Ready CV Builder", icon: FileEdit, badge: "Free PDF", desc: "Build a clean CV guaranteed to pass employer screening software" },
-    { id: "ats-xray", name: "CV Scanner & Reviewer", icon: FileSearch, badge: "Checker", desc: "Check your existing CV for formatting errors and missing keywords" },
-    { id: "tracking", name: "Application View Tracker", icon: Eye, badge: "Popular", desc: "See when recruiters open and read your CV" },
-    { id: "vouch", name: "Manager Endorsements", icon: ShieldCheck, badge: "Verified", desc: "Ask former managers to confirm your experience with 1 click" },
-    { id: "cv-lab", name: "CV Version Comparison", icon: FlaskConical, badge: "Tool", desc: "Compare two versions of your CV to see which sounds stronger" },
-    { id: "ghost-tracker", name: "Follow-Up Tracker", icon: Ghost, badge: "Email", desc: "Track unanswered applications and get polite follow-up templates" },
-    { id: "job-gap", name: "Job Match & Skills Checker", icon: Search, badge: "Review", desc: "Compare your CV against any job advert to spot missing requirements" },
-    { id: "interview-kit", name: "Interview Prep Kit", icon: BookOpen, badge: "Guide", desc: "Practice common UK interview questions with structured answer examples" },
-    { id: "offer-evaluator", name: "Job Offer & Pay Comparison", icon: Scale, badge: "Compare", desc: "Compare salary, commute costs, and pension contributions between offers" },
-    { id: "right-to-work", name: "UK Work Eligibility Check", icon: Shield, badge: "Visa Info", desc: "Check UK right-to-work rules, visa requirements, and privacy options" },
-  ];
+  // Load weather data
+  const loadWeatherData = useCallback(async (loc: LocationData, isManualRefresh = false) => {
+    if (isManualRefresh) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
+    setLoadError(null);
 
-  const utilityTools = [
-    { id: "take-home-pay", name: "Take-Home Pay", icon: Calculator, badge: "HMRC", desc: "England/Wales vs Scotland bands, NI 8%, 60% trap" },
-    { id: "self-employed", name: "Self-Employed Tax", icon: Briefcase, badge: "HMRC", desc: "Class 4 NI 6%, Payments on Account & Set-aside reserve" },
-    { id: "stamp-duty", name: "Stamp Duty (SDLT)", icon: Home, badge: "Property", desc: "First-time buyer relief & 5% surcharge" },
-    { id: "postcode", name: "Postcode Lookup", icon: MapPin, badge: "Live ONS", desc: "Live validation, constituency & NHS health authority" },
-    { id: "carbon-grid", name: "Live Grid Carbon", icon: Leaf, badge: "National Grid", desc: "Live UK grid intensity & best time to run washing machine" },
-    { id: "ofgem", name: "Ofgem Price Cap", icon: Zap, badge: "Energy", desc: "Appliance running cost calculator & statutory SVT cap" },
-    { id: "bank-holidays", name: "Bank Holidays Feed", icon: Calendar, badge: "Live GOV.UK", desc: "Working days & statutory notice deadline counter" },
-    { id: "student-loans", name: "Student Loan Payoff", icon: GraduationCap, badge: "SLC", desc: "Plans 1, 2, 4, 5 & Postgrad 30/40yr write-off simulator" },
-    { id: "tax-codes", name: "Tax Code Checker", icon: FileCode, badge: "HMRC", desc: "Decode 1257L, BR, D0, K-codes, Scottish S & emergency W1" },
-    { id: "vat", name: "VAT Calculator", icon: Percent, badge: "HMRC", desc: "20% Standard, 5% Reduced Gross ↔ Net conversions" },
-    { id: "rail-delay", name: "Delay Repay & Flight", icon: Train, badge: "Transport", desc: "National Rail rules & UK261 £520 flight compensation" },
-    { id: "text-tools", name: "Everyday Client Tools", icon: Wrench, badge: "Browser", desc: "Word counter, password generator & QR maker" },
-  ];
+    try {
+      const data = await fetchFullWeather(loc);
+      setWeather(data);
+      setSelectedHour(undefined);
+      setScrubIndex(0);
+      try {
+        localStorage.setItem('aether_saved_loc', JSON.stringify(loc));
+      } catch {}
+    } catch (err: any) {
+      console.error('Weather load error:', err);
+      setLoadError(err?.message || 'Unable to load atmospheric data. Please check your internet connection.');
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, []);
 
-  const currentToolList = activeSection === 'career' ? careerTools : utilityTools;
+  useEffect(() => {
+    loadWeatherData(currentLocation);
+  }, [currentLocation, loadWeatherData]);
 
-  const filteredTools = currentToolList.filter(t => 
-    t.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    t.desc.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Toggle Units
+  const toggleTempUnit = () => {
+    const next = tempUnit === 'celsius' ? 'fahrenheit' : 'celsius';
+    setTempUnit(next);
+    localStorage.setItem('aether_temp_unit', next);
+  };
+
+  const toggleSpeedUnit = () => {
+    const next = speedUnit === 'mph' ? 'kmh' : 'mph';
+    setSpeedUnit(next);
+    localStorage.setItem('aether_speed_unit', next);
+  };
+
+  // Derived Intelligence Modules (use effectiveWeather so time-scrubbing updates insights too!)
+  const alerts: SevereAlert[] = effectiveWeather ? deriveSevereAlerts(effectiveWeather) : [];
+  const activities = effectiveWeather ? deriveActivitySuitabilities(effectiveWeather) : [];
+  const transit = effectiveWeather ? deriveTransitImpact(effectiveWeather) : null;
+  const wardrobe = effectiveWeather ? deriveWardrobeRecommendations(effectiveWeather) : null;
 
   return (
-    <AppAuthProvider>
-      <div className="w-full max-w-full min-h-screen flex flex-col overflow-x-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
-        {/* Top Navbar */}
-        <Navbar 
-          activeSection={activeSection}
-          setActiveSection={setActiveSection}
-          activeToolId={activeToolId}
-          setActiveToolId={setActiveToolId}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          isDarkMode={isDarkMode}
-          setIsDarkMode={setIsDarkMode}
+    <div className={`relative min-h-screen w-full flex flex-col ${theme.ui.pageBg} ${theme.ui.primaryText} font-sans selection:bg-rose-500 selection:text-amber-50 transition-colors pb-20`}>
+      
+      {/* Dynamic Atmospheric Particle Canvas (Volumetric Clouds, Sun Rays, Rain, Stardust Motes) */}
+      {effectiveWeather && (
+        <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+          <AtmosphericCanvas weather={effectiveWeather} className="w-full h-full opacity-90 dark:opacity-95" />
+          <div 
+            className="absolute inset-0 pointer-events-none" 
+            style={{
+              backgroundImage: `radial-gradient(circle at 50% 18%, ${theme.accentColors.glow} 0%, transparent 65%)`
+            }}
+          />
+        </div>
+      )}
+
+      {/* Fullscreen Zen Sanctuary Overlay ("Look Outside") */}
+      {effectiveWeather && (
+        <ZenSanctuaryOverlay
+          isOpen={isZenMode}
+          onExit={() => setIsZenMode(false)}
+          weather={effectiveWeather}
+          unit={tempUnit}
+          isSoundPlaying={isSoundPlaying}
+          onToggleSound={handleToggleSound}
+          onOpenSoundMixer={() => setIsSoundMixerOpen(true)}
         />
+      )}
 
-        {/* Main Container */}
-        <main className="flex-1 w-full min-w-0 px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-          {/* Quick Tool Navigation Scroller */}
-          <div className="w-full max-w-full min-w-0 flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-            {filteredTools.map((tool) => {
-              const Icon = tool.icon;
-              const isActive = activeToolId === tool.id;
+      {/* Standard Observatory Interface (hidden when in Fullscreen Zen Window Mode) */}
+      {!isZenMode && (
+        <>
+          {/* Global Sticky Navigation Header */}
+          <WeatherHeader 
+            activeTab={activeTab}
+            onSelectTab={navigateToPage}
+            tempUnit={tempUnit}
+            onToggleTempUnit={toggleTempUnit}
+            speedUnit={speedUnit}
+            onToggleSpeedUnit={toggleSpeedUnit}
+            isDarkMode={isDarkMode}
+            onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
+            onRefresh={() => loadWeatherData(currentLocation, true)}
+            isRefreshing={isRefreshing}
+            alertCount={alerts.length}
+            onOpenAlerts={() => setShowAlertModal(true)}
+            isSoundPlaying={isSoundPlaying}
+            onToggleSound={handleToggleSound}
+            soundLevels={soundLevels}
+            onOpenSoundMixer={() => setIsSoundMixerOpen(true)}
+            onEnterZenMode={() => setIsZenMode(true)}
+          />
 
-              return (
-                <button
-                  key={tool.id}
-                  onClick={() => setActiveToolId(tool.id)}
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold shrink-0 transition-all border ${
-                    isActive
-                      ? activeSection === 'career'
-                        ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                        : "bg-emerald-600 text-white border-emerald-600 shadow-sm"
-                      : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
-                  }`}
-                >
-                  <Icon className={`w-3.5 h-3.5 ${isActive ? "text-white" : activeSection === 'career' ? "text-blue-500" : "text-emerald-500"}`} />
-                  <span>{tool.name}</span>
-                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                    isActive ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500"
-                  }`}>
-                    {tool.badge}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Dynamic Tool Content Render */}
-          <div className="transition-all">
-            {/* Career Tools */}
-            {activeToolId === 'cv-builder' && (
-              <CvBuilder 
-                onNavigateToTracking={() => {
-                  setActiveSection('career');
-                  setActiveToolId('tracking');
-                }} 
-                onNavigateToScanner={() => {
-                  setActiveSection('career');
-                  setActiveToolId('ats-xray');
-                }}
+          {/* Main Content Area */}
+          <main className="relative z-10 flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+            
+            {/* Dedicated Page Breadcrumbs & Snapshot (for subpages) */}
+            {effectiveWeather && (
+              <PageNavigationBanner 
+                activeTab={activeTab}
+                onNavigate={navigateToPage}
+                location={effectiveWeather.location}
+                current={effectiveWeather.current}
+                unit={tempUnit}
               />
             )}
-            {activeToolId === 'ats-xray' && (
-              <AtsXray onNavigateToBuilder={() => {
-                setActiveSection('career');
-                setActiveToolId('cv-builder');
-              }} />
+
+            {/* Hyperlocal Search & Location Bar */}
+            <div className="w-full">
+              <HyperlocalSearch 
+                currentLocation={currentLocation}
+                onSelectLocation={(loc) => setCurrentLocation(loc)}
+              />
+            </div>
+
+            {/* Collectible Illustrated World Postcard Deck (Multi-City Comparison) */}
+            {activeTab === 'overview' && (
+              <WorldPostcardDeck
+                currentLocation={currentLocation}
+                currentTempC={effectiveWeather?.current.temperature}
+                unit={tempUnit}
+                onSelectLocation={(loc) => setCurrentLocation(loc)}
+              />
             )}
-            {activeToolId === 'tracking' && <ApplicationTracking />}
-            {activeToolId === 'vouch' && <VouchVerification />}
-            {activeToolId === 'cv-lab' && <CvLab />}
-            {activeToolId === 'ghost-tracker' && <GhostTracker />}
-            {activeToolId === 'job-gap' && <JobAdGapAnalysis />}
-            {activeToolId === 'interview-kit' && <InterviewKit />}
-            {activeToolId === 'offer-evaluator' && <OfferEvaluator />}
-            {activeToolId === 'right-to-work' && <RightToWorkBlock />}
 
-            {/* UK Utility Tools */}
-            {activeToolId === 'take-home-pay' && <TakeHomePayCalc />}
-            {activeToolId === 'self-employed' && <SelfEmployedTaxCalc />}
-            {activeToolId === 'stamp-duty' && <StampDutyCalc />}
-            {activeToolId === 'postcode' && <PostcodeLookup />}
-            {activeToolId === 'carbon-grid' && <CarbonIntensityLive />}
-            {activeToolId === 'ofgem' && <OfgemApplianceCalc />}
-            {activeToolId === 'bank-holidays' && <BankHolidaysExplorer />}
-            {activeToolId === 'student-loans' && <StudentLoanCalc />}
-            {activeToolId === 'tax-codes' && <TaxCodeChecker />}
-            {activeToolId === 'vat' && <VatCalculator />}
-            {activeToolId === 'rail-delay' && <RailDelayRepayCalc />}
-            {activeToolId === 'text-tools' && <TextAndSecurityTools />}
-          </div>
+            {/* Loading State Skeleton */}
+            {isLoading && !effectiveWeather && (
+              <div className={`relative w-full py-24 rounded-[36px] ${theme.ui.cardSurface} ${theme.ui.cardBorder} ${theme.ui.glowShadow} overflow-hidden flex flex-col items-center justify-center space-y-4`}>
+                <ThemeCardArtWrapper theme={theme} variant="hero" />
+                <div className="relative z-10">
+                  <div className={`w-16 h-16 rounded-3xl ${theme.ui.activePill} flex items-center justify-center ${theme.ui.activePillText} shadow-lg`}>
+                    <CloudSun className="w-8 h-8 animate-pulse" />
+                  </div>
+                  <Loader2 className={`w-6 h-6 ${theme.ui.accentText} animate-spin absolute -top-1 -right-1`} />
+                </div>
+                <div className="relative z-10 text-center space-y-1">
+                  <p className={`text-sm font-black ${theme.ui.primaryText}`}>
+                    Gathering Atmospheric Radar &amp; Telemetry
+                  </p>
+                  <p className={`text-xs font-medium ${theme.ui.secondaryText}`}>
+                    Contacting high-resolution meteorological satellites for {currentLocation.name}...
+                  </p>
+                </div>
+              </div>
+            )}
 
-          {/* AdSense Compliant Banner Placement */}
-          <div className="mt-8">
-            <AdBanner slotId="8472910382" label="SPONSORED BY GOOGLE ADSENSE" />
-          </div>
-        </main>
+            {/* Load Error Fallback */}
+            {loadError && (
+              <div className={`relative w-full p-6 rounded-3xl ${theme.ui.cardSurface} ${theme.ui.cardBorder} flex items-center justify-between gap-4 overflow-hidden`}>
+                <ThemeCardArtWrapper theme={theme} variant="compact" />
+                <div className="relative z-10 flex items-center gap-3">
+                  <AlertTriangle className="w-6 h-6 text-rose-500 shrink-0" />
+                  <div>
+                    <p className={`text-sm font-black ${theme.ui.primaryText}`}>
+                      Forecast Telemetry Interrupted
+                    </p>
+                    <p className={`text-xs ${theme.ui.secondaryText}`}>
+                      {loadError}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => loadWeatherData(currentLocation)}
+                  className={`relative z-10 px-4 py-2 rounded-xl text-xs font-black ${theme.ui.activePill} ${theme.ui.activePillText} shrink-0 transition-transform active:scale-95 cursor-pointer`}
+                >
+                  Retry Sync
+                </button>
+              </div>
+            )}
 
-        {/* Footer */}
-        <footer className="mt-12 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-10 text-xs text-slate-500 dark:text-slate-400">
-          <div className="w-full px-4 sm:px-6 lg:px-8 space-y-6">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <Logo className="w-6 h-6" showBadge={false} />
-                <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">
-                  BookMarkSoft UK
-                </span>
-                <span>— The Free UK Career Intelligence &amp; Citizen Utilities Portal</span>
+            {/* DEDICATED MULTI-PAGE VIEWS */}
+            {effectiveWeather && (
+              <>
+                {/* ==================================================== */}
+                {/* PAGE 1: FORECAST HUB                                 */}
+                {/* ==================================================== */}
+                {activeTab === 'overview' && (
+                  <div className="space-y-8 animate-fade-in">
+                    <CurrentHero 
+                      weather={effectiveWeather}
+                      unit={tempUnit}
+                      speedUnit={speedUnit}
+                      alerts={alerts}
+                      onOpenAlerts={() => setShowAlertModal(true)}
+                      onOpenRadar={() => navigateToPage('radar')}
+                    />
+
+                    {/* Interactive 24-Hour Time-Travel Scrubber */}
+                    <TimeTravelScrubber
+                      weather={effectiveWeather}
+                      unit={tempUnit}
+                      scrubIndex={scrubIndex}
+                      onScrubChange={setScrubIndex}
+                    />
+
+                    <HourlyCurveChart 
+                      hourly={effectiveWeather.hourly}
+                      unit={tempUnit}
+                    />
+
+                    <HourlyForecastSlider 
+                      hourly={effectiveWeather.hourly}
+                      unit={tempUnit}
+                      speedUnit={speedUnit}
+                      selectedHourTime={selectedHour?.time}
+                      onSelectHour={(hour) => setSelectedHour(hour)}
+                    />
+
+                    <DailyForecastOutlook 
+                      daily={effectiveWeather.daily}
+                      unit={tempUnit}
+                    />
+
+                    <PageLaunchersGrid 
+                      weather={effectiveWeather}
+                      transit={transit}
+                      wardrobe={wardrobe}
+                      activities={activities}
+                      onNavigate={navigateToPage}
+                    />
+                  </div>
+                )}
+
+                {/* ==================================================== */}
+                {/* PAGE 2: LIVE DOPPLER RADAR                           */}
+                {/* ==================================================== */}
+                {activeTab === 'radar' && (
+                  <div className="space-y-6 animate-fade-in">
+                    <div className="h-[680px] rounded-3xl overflow-hidden shadow-2xl">
+                      <LiveRadarMap location={effectiveWeather.location} isDarkMode={isDarkMode} />
+                    </div>
+                  </div>
+                )}
+
+                {/* ==================================================== */}
+                {/* PAGE 3: CELESTIAL & STARGAZING OBSERVATORY           */}
+                {/* ==================================================== */}
+                {activeTab === 'celestial' && (
+                  <CelestialObservatory weather={effectiveWeather} />
+                )}
+
+                {/* ==================================================== */}
+                {/* PAGE 4: BOTANICAL, PET & HOME MICRO-CLIMATE STUDIO   */}
+                {/* ==================================================== */}
+                {activeTab === 'microclimate' && (
+                  <MicroClimateStudio weather={effectiveWeather} unit={tempUnit} />
+                )}
+
+                {/* ==================================================== */}
+                {/* PAGE 5: AIR QUALITY & POLLEN SANCTUARY               */}
+                {/* ==================================================== */}
+                {activeTab === 'air-pollen' && (
+                  <div className="space-y-6 animate-fade-in">
+                    <PollenAndAirQuality 
+                      airQuality={effectiveWeather.airQuality}
+                      current={effectiveWeather.current}
+                    />
+                  </div>
+                )}
+
+                {/* ==================================================== */}
+                {/* PAGE 6: COMMUTE & TRANSIT INTELLIGENCE               */}
+                {/* ==================================================== */}
+                {activeTab === 'commute' && transit && (
+                  <div className="space-y-6 animate-fade-in">
+                    <TransitAndCommuteFeed 
+                      transit={transit}
+                      locationName={effectiveWeather.location.name}
+                    />
+                  </div>
+                )}
+
+                {/* ==================================================== */}
+                {/* PAGE 7: OUTDOOR & EVENT PLANNER                      */}
+                {/* ==================================================== */}
+                {activeTab === 'outdoor' && (
+                  <div className="space-y-6 animate-fade-in">
+                    <OutdoorActivityPlanner 
+                      activities={activities}
+                      locationName={effectiveWeather.location.name}
+                    />
+                  </div>
+                )}
+
+                {/* ==================================================== */}
+                {/* PAGE 8: SMART WARDROBE ADVISOR                       */}
+                {/* ==================================================== */}
+                {activeTab === 'wardrobe' && wardrobe && (
+                  <div className="space-y-6 animate-fade-in">
+                    <SmartWardrobePrompts 
+                      wardrobe={wardrobe}
+                      apparentTempC={effectiveWeather.current.apparentTemperature}
+                    />
+                  </div>
+                )}
+              </>
+            )}
+          </main>
+
+          {/* Floating 1-Tap Page Dock */}
+          <FloatingPageDock 
+            activeTab={activeTab}
+            onSelectTab={navigateToPage}
+          />
+
+          {/* Atmospheric Footer */}
+          <footer className={`relative z-10 mt-16 border-t ${theme.ui.headerBorder} ${theme.ui.headerSurface} py-8 text-xs ${theme.ui.secondaryText} transition-all overflow-hidden`}>
+            <ThemeCardArtWrapper theme={theme} variant="compact" showCornerFiligrees={false} />
+            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-2.5">
+                  <div className={`w-7 h-7 rounded-xl ${theme.ui.activePill} flex items-center justify-center ${theme.ui.activePillText} font-black text-xs shadow-sm`}>
+                    A
+                  </div>
+                  <span className={`font-black ${theme.ui.primaryText} text-sm`}>
+                    AETHER ATMOS
+                  </span>
+                  <span className={`text-[11px] font-bold ${theme.ui.subheadingText}`}>
+                    — Planetary Meteorological Sanctuary · {theme.name}
+                  </span>
+                </div>
+
+                <div className={`flex flex-wrap items-center justify-center gap-4 text-xs font-bold ${theme.ui.primaryText}`}>
+                  <button onClick={() => navigateToPage('overview')} className={`hover:${theme.ui.accentText} transition-colors cursor-pointer`}>
+                    10-Day Outlook
+                  </button>
+                  <button onClick={() => navigateToPage('celestial')} className={`hover:${theme.ui.accentText} transition-colors cursor-pointer`}>
+                    Celestial &amp; Lunar
+                  </button>
+                  <button onClick={() => navigateToPage('microclimate')} className={`hover:${theme.ui.accentText} transition-colors cursor-pointer`}>
+                    Botanical &amp; Home
+                  </button>
+                  <button onClick={() => navigateToPage('radar')} className={`hover:${theme.ui.accentText} transition-colors cursor-pointer`}>
+                    Live Doppler Radar
+                  </button>
+                  <button onClick={() => navigateToPage('air-pollen')} className={`hover:${theme.ui.accentText} transition-colors cursor-pointer`}>
+                    Allergen &amp; UV
+                  </button>
+                  <button onClick={() => navigateToPage('commute')} className={`hover:${theme.ui.accentText} transition-colors cursor-pointer`}>
+                    Commute Impact
+                  </button>
+                  <button onClick={() => navigateToPage('outdoor')} className={`hover:${theme.ui.accentText} transition-colors cursor-pointer`}>
+                    Event Suitability
+                  </button>
+                  <button onClick={() => navigateToPage('wardrobe')} className={`hover:${theme.ui.accentText} transition-colors cursor-pointer`}>
+                    Wardrobe Layering
+                  </button>
+                </div>
               </div>
 
-              {/* Fast Tool Links */}
-              <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-medium">
-                <button onClick={() => { setActiveSection('career'); setActiveToolId('cv-builder'); }} className="hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer">
-                  ATS CV Builder
-                </button>
-                <button onClick={() => { setActiveSection('career'); setActiveToolId('ats-xray'); }} className="hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer">
-                  ATS X-Ray Scanner
-                </button>
-                <button onClick={() => { setActiveSection('career'); setActiveToolId('vouch'); }} className="hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer">
-                  Vouch References
-                </button>
-                <button onClick={() => { setActiveSection('utilities'); setActiveToolId('take-home-pay'); }} className="hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer">
-                  Take-Home Pay
-                </button>
-                <button onClick={() => { setActiveSection('utilities'); setActiveToolId('stamp-duty'); }} className="hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer">
-                  Stamp Duty
-                </button>
-                <button onClick={() => { setActiveSection('utilities'); setActiveToolId('carbon-grid'); }} className="hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer">
-                  National Grid ESO
-                </button>
+              <div className={`pt-4 border-t ${theme.ui.dividerBorder} flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] font-medium ${theme.ui.secondaryText}`}>
+                <p>
+                  Telemetry powered by Open-Meteo High-Resolution NWP Models, RainViewer Doppler radar arrays, Copernicus Atmosphere Monitoring Service, and postcodes.io.
+                </p>
+                <p className="shrink-0 font-mono text-[10px] font-bold">
+                  &copy; {new Date().getFullYear()} AETHER ATMOS • {theme.name} World
+                </p>
               </div>
             </div>
+          </footer>
+        </>
+      )}
 
-            {/* Legal, AdSense & Trust Navigation */}
-            <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4">
-                <button
-                  type="button"
-                  onClick={() => setShowPrivacyPolicy(true)}
-                  className="font-semibold text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer"
-                >
-                  Privacy Policy (UK GDPR)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowTerms(true)}
-                  className="font-semibold text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer"
-                >
-                  Terms of Service
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setForceOpenCookieSettings(true)}
-                  className="font-semibold text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer"
-                >
-                  Cookie Preferences
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowAboutContact(true)}
-                  className="font-semibold text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer"
-                >
-                  About &amp; Editorial Transparency
-                </button>
-                <a
-                  href="/ads.txt"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer font-mono text-[11px]"
-                >
-                  ads.txt
-                </a>
-              </div>
+      {/* Modular Atmospheric Theme Selector Modal */}
+      <ThemeSelectorModal />
 
-              <span className="text-[11px] text-slate-400 dark:text-slate-500">
-                &copy; {new Date().getFullYear()} BookMarkSoft UK Ltd • All rights reserved
-              </span>
-            </div>
+      {/* 5-Channel Soundscape Mixer Modal */}
+      <SoundscapeMixerModal
+        isOpen={isSoundMixerOpen}
+        onClose={() => setIsSoundMixerOpen(false)}
+        weather={effectiveWeather}
+        isSoundPlaying={isSoundPlaying}
+        onToggleSound={handleToggleSound}
+        onEnterZenMode={() => setIsZenMode(true)}
+      />
 
-            <p className="text-[11px] text-slate-400 dark:text-slate-500 leading-relaxed text-center sm:text-left">
-              BookMarkSoft UK provides informational estimates based on public UK government data feeds (GOV.UK, HMRC, ONS, National Grid ESO, postcodes.io, Ofgem). 
-              This site does not claim official government affiliation or provide formal tax, legal, or investment advice. Ads are served via Google AdSense in compliance with Google Publisher Policies and the UK Information Commissioner&rsquo;s Office (ICO).
-            </p>
-          </div>
-        </footer>
+      {/* Severe Weather Alerts Modal */}
+      {effectiveWeather && (
+        <SevereWeatherAlertsModal 
+          isOpen={showAlertModal}
+          onClose={() => setShowAlertModal(false)}
+          alerts={alerts}
+          locationName={effectiveWeather.location.name}
+        />
+      )}
+    </div>
+  );
+}
 
-        {/* Legal Modals & Cookie Banner */}
-        <PrivacyPolicyModal 
-          isOpen={showPrivacyPolicy} 
-          onClose={() => setShowPrivacyPolicy(false)}
-          onOpenCookieSettings={() => setForceOpenCookieSettings(true)}
-        />
-        <TermsOfServiceModal 
-          isOpen={showTerms} 
-          onClose={() => setShowTerms(false)} 
-        />
-        <AboutAndContactModal 
-          isOpen={showAboutContact} 
-          onClose={() => setShowAboutContact(false)}
-          onOpenPrivacyPolicy={() => setShowPrivacyPolicy(true)}
-          onOpenTerms={() => setShowTerms(true)}
-        />
-        <CookieConsentBanner 
-          onOpenPrivacyPolicy={() => setShowPrivacyPolicy(true)}
-          forceOpen={forceOpenCookieSettings}
-          onCloseForceOpen={() => setForceOpenCookieSettings(false)}
-        />
-
-        {/* User Authentication & Profile Dialogs */}
-        <AuthModal />
-        <UserProfileModal 
-          onNavigateToBuilder={() => {
-            setActiveSection('career');
-            setActiveToolId('cv-builder');
-          }}
-          onNavigateToTracking={() => {
-            setActiveSection('career');
-            setActiveToolId('tracking');
-          }}
-        />
-      </div>
-    </AppAuthProvider>
+export default function App() {
+  return (
+    <WeatherThemeProvider>
+      <WeatherAppContent />
+    </WeatherThemeProvider>
   );
 }

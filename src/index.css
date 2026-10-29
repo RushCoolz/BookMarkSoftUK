@@ -13,11 +13,11 @@ html {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
-  background-color: #f8fafc;
+  background-color: #ffd6e7;
 }
 
 html.dark {
-  background-color: #020617;
+  background-color: #14092b;
 }
 
 body {
@@ -29,11 +29,11 @@ body {
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
-  background-color: #f8fafc;
+  background-color: #ffd6e7;
 }
 
 html.dark body {
-  background-color: #020617;
+  background-color: #14092b;
 }
 
 #root {
@@ -43,4 +43,90 @@ html.dark body {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
+}
+
+@keyframes floatSoft {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1deg);
+  }
+}
+
+@keyframes floatGentle {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes pulseHalo {
+  0%, 100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes bounceSlow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-float-soft {
+  animation: floatSoft 6s ease-in-out infinite;
+}
+
+.animate-float-gentle {
+  animation: floatGentle 4s ease-in-out infinite;
+}
+
+.animate-pulse-halo {
+  animation: pulseHalo 4.5s ease-in-out infinite;
+}
+
+.animate-bounce-slow {
+  animation: bounceSlow 3s ease-in-out infinite;
+}
+
+/* Tactile 3D Claymorphic and Luminous Jewel Surfaces */
+.clay-card {
+  box-shadow: 
+    0 18px 42px -10px rgba(244, 63, 94, 0.22),
+    0 6px 16px -2px rgba(251, 191, 36, 0.16),
+    inset 0 2px 6px 0 rgba(254, 240, 138, 0.5),
+    inset 0 -3px 8px 0 rgba(245, 158, 11, 0.2);
+}
+
+.dark .clay-card {
+  box-shadow: 
+    0 22px 48px -10px rgba(15, 5, 35, 0.7),
+    0 6px 20px -2px rgba(244, 63, 94, 0.22),
+    inset 0 2px 5px 0 rgba(254, 240, 138, 0.22),
+    inset 0 -3px 8px 0 rgba(15, 5, 35, 0.5);
+}
+
+.clay-button {
+  box-shadow: 
+    0 10px 22px -4px rgba(251, 146, 60, 0.32),
+    inset 0 2px 4px 0 rgba(254, 240, 138, 0.55),
+    inset 0 -2px 5px 0 rgba(217, 119, 6, 0.25);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.clay-button:active {
+  transform: translateY(2px) scale(0.98);
+  box-shadow: 
+    0 3px 10px -2px rgba(251, 146, 60, 0.25),
+    inset 0 2px 4px 0 rgba(0, 0, 0, 0.15);
 }
