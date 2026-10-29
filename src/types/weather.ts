@@ -103,7 +103,31 @@ export interface RadarMetadata {
   host: string;
   past: RadarScan[];
   nowcast: RadarScan[];
+  infrared: RadarScan[];
 }
+
+export type KeylessRadarLayerId =
+  | 'rainviewer-doppler'
+  | 'rainviewer-infrared'
+  | 'iem-nexrad'
+  | 'iem-water-vapor'
+  | 'iem-precip-1h';
+
+export interface RadarGridNode {
+  id: string;
+  label: string;
+  lat: number;
+  lon: number;
+  temp: number;
+  precipitation: number;
+  rainProb: number;
+  windSpeed: number;
+  windDirection: number;
+  weatherCode: number;
+  cloudCover: number;
+  isStormCell: boolean;
+}
+
 
 export interface ActivitySuitability {
   id: string;

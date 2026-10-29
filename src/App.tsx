@@ -52,6 +52,8 @@ import { ThemeCardArtWrapper } from './components/weather/ThemeCardArtWrapper';
 import { WorldPostcardDeck } from './components/weather/WorldPostcardDeck';
 import { TimeTravelScrubber } from './components/weather/TimeTravelScrubber';
 import { CelestialObservatory } from './components/weather/CelestialObservatory';
+import { SolarSystemOrrery } from './components/weather/SolarSystemOrrery';
+import { StarPatternSkyDome } from './components/weather/StarPatternSkyDome';
 import { MicroClimateStudio } from './components/weather/MicroClimateStudio';
 import { SoundscapeMixerModal } from './components/weather/SoundscapeMixerModal';
 import { ZenSanctuaryOverlay } from './components/weather/ZenSanctuaryOverlay';
@@ -73,9 +75,10 @@ function WeatherAppContent() {
   // 24-Hour Time-Travel Scrubber Index (0 = Live Now, 1..23 = future hours)
   const [scrubIndex, setScrubIndex] = useState<number>(0);
 
-  // Zen Sanctuary Fullscreen Mode & Soundscape Mixer Modal
+  // Zen Sanctuary Fullscreen Mode, Soundscape Mixer Modal & Ambient Sky Constellation Patterns
   const [isZenMode, setIsZenMode] = useState<boolean>(false);
   const [isSoundMixerOpen, setIsSoundMixerOpen] = useState<boolean>(false);
+  const [showConstellationPatterns, setShowConstellationPatterns] = useState<boolean>(true);
 
   // Preference Settings
   const [tempUnit, setTempUnit] = useState<TempUnit>(() => {
@@ -280,10 +283,14 @@ function WeatherAppContent() {
   return (
     <div className={`relative min-h-screen w-full flex flex-col ${theme.ui.pageBg} ${theme.ui.primaryText} font-sans selection:bg-rose-500 selection:text-amber-50 transition-colors pb-20`}>
       
-      {/* Dynamic Atmospheric Particle Canvas (Volumetric Clouds, Sun Rays, Rain, Stardust Motes) */}
+      {/* Dynamic Atmospheric Particle Canvas (Volumetric Clouds, Sun Rays, Rain, Stardust Motes, Constellation Patterns) */}
       {effectiveWeather && (
         <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-          <AtmosphericCanvas weather={effectiveWeather} className="w-full h-full opacity-90 dark:opacity-95" />
+          <AtmosphericCanvas
+            weather={effectiveWeather}
+            showConstellationPatterns={showConstellationPatterns}
+            className="w-full h-full opacity-90 dark:opacity-95"
+          />
           <div 
             className="absolute inset-0 pointer-events-none" 
             style={{
@@ -303,6 +310,8 @@ function WeatherAppContent() {
           isSoundPlaying={isSoundPlaying}
           onToggleSound={handleToggleSound}
           onOpenSoundMixer={() => setIsSoundMixerOpen(true)}
+          showConstellationPatterns={showConstellationPatterns}
+          onToggleConstellations={() => setShowConstellationPatterns((prev) => !prev)}
         />
       )}
 
@@ -450,6 +459,16 @@ function WeatherAppContent() {
                       unit={tempUnit}
                     />
 
+                    {/* Live Heliocentric Solar System Orrery */}
+                    <SolarSystemOrrery weather={effectiveWeather} />
+
+                    {/* Live Star Patterns & Zenith Constellation Sky Dome */}
+                    <StarPatternSkyDome
+                      weather={effectiveWeather}
+                      ambientSkyConstellations={showConstellationPatterns}
+                      onToggleAmbientSkyConstellations={() => setShowConstellationPatterns((prev) => !prev)}
+                    />
+
                     <PageLaunchersGrid 
                       weather={effectiveWeather}
                       transit={transit}
@@ -475,7 +494,11 @@ function WeatherAppContent() {
                 {/* PAGE 3: CELESTIAL & STARGAZING OBSERVATORY           */}
                 {/* ==================================================== */}
                 {activeTab === 'celestial' && (
-                  <CelestialObservatory weather={effectiveWeather} />
+                  <CelestialObservatory
+                    weather={effectiveWeather}
+                    ambientSkyConstellations={showConstellationPatterns}
+                    onToggleAmbientSkyConstellations={() => setShowConstellationPatterns((prev) => !prev)}
+                  />
                 )}
 
                 {/* ==================================================== */}

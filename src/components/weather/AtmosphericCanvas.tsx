@@ -7,6 +7,7 @@ interface AtmosphericCanvasProps {
   weather: WeatherData;
   className?: string;
   intensity?: number;
+  showConstellationPatterns?: boolean;
 }
 
 interface ParticleItem {
@@ -40,7 +41,12 @@ interface AnimeTowerCloud {
   puffs: AnimeCloudPuff[];
 }
 
-export function AtmosphericCanvas({ weather, className = '', intensity = 1.0 }: AtmosphericCanvasProps) {
+export function AtmosphericCanvas({
+  weather,
+  className = '',
+  intensity = 1.0,
+  showConstellationPatterns = true
+}: AtmosphericCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animFrameIdRef = useRef<number | null>(null);
   const { theme } = useWeatherTheme();
@@ -195,18 +201,20 @@ export function AtmosphericCanvas({ weather, className = '', intensity = 1.0 }: 
           opacity: 0.5 + Math.random() * 0.4
         });
       }
-    } else if (isNight) {
-      for (let i = 0; i < 110; i++) {
+    } else if (isNight || showConstellationPatterns) {
+      const starCount = isNight ? 110 : 45;
+      for (let i = 0; i < starCount; i++) {
         stars.push({
           x: Math.random() * width,
-          y: Math.random() * (height * 0.65),
-          radius: 1.2 + Math.random() * 2.4,
-          alpha: 0.35 + Math.random() * 0.65,
-          delta: 0.01 + Math.random() * 0.015,
+          y: Math.random() * (height * 0.62),
+          radius: 1.1 + Math.random() * 2.2,
+          alpha: (isNight ? 0.35 : 0.18) + Math.random() * 0.55,
+          delta: 0.008 + Math.random() * 0.014,
           glint: Math.random() > 0.65
         });
       }
-    } else {
+    }
+    if (!isNight && category !== 'rain' && category !== 'thunderstorm') {
       for (let i = 0; i < 6; i++) {
         sunRays.push({
           angle: -0.4 + (i * 0.15) + (Math.random() * 0.03),
@@ -216,6 +224,68 @@ export function AtmosphericCanvas({ weather, className = '', intensity = 1.0 }: 
         });
       }
     }
+
+    // 3b. Live Sky Constellation Patterns (Ursa Major, Cassiopeia, Orion, Cygnus, Leo)
+    const skyConstellations = [
+      {
+        name: 'URSA MAJOR',
+        cx: 0.18,
+        cy: 0.18,
+        stars: [
+          { dx: -68, dy: -16, r: 3.1, color: '#fdba74', label: 'Dubhe' },
+          { dx: -62, dy: 14, r: 2.5, color: '#e0f2fe' },
+          { dx: -24, dy: 20, r: 2.5, color: '#e0f2fe' },
+          { dx: -14, dy: -6, r: 2.2, color: '#f8fafc' },
+          { dx: 18, dy: 2, r: 2.9, color: '#e0f2fe', label: 'Alioth' },
+          { dx: 46, dy: 8, r: 2.6, color: '#e0f2fe', label: 'Mizar' },
+          { dx: 76, dy: 24, r: 2.8, color: '#93c5fd', label: 'Alkaid' }
+        ],
+        lines: [[0, 1], [1, 2], [2, 3], [3, 0], [3, 4], [4, 5], [5, 6]]
+      },
+      {
+        name: 'CASSIOPEIA',
+        cx: 0.48,
+        cy: 0.13,
+        stars: [
+          { dx: -52, dy: -12, r: 2.7, color: '#fef08a', label: 'Caph' },
+          { dx: -24, dy: 16, r: 3.0, color: '#fdba74', label: 'Schedar' },
+          { dx: 2, dy: -4, r: 2.8, color: '#93c5fd', label: 'Tsih' },
+          { dx: 28, dy: 18, r: 2.5, color: '#e0f2fe' },
+          { dx: 54, dy: -8, r: 2.3, color: '#93c5fd' }
+        ],
+        lines: [[0, 1], [1, 2], [2, 3], [3, 4]]
+      },
+      {
+        name: 'ORION',
+        cx: 0.78,
+        cy: 0.24,
+        stars: [
+          { dx: -28, dy: -42, r: 3.6, color: '#fca5a5', label: 'Betelgeuse' },
+          { dx: 24, dy: -34, r: 2.7, color: '#bae6fd', label: 'Bellatrix' },
+          { dx: -10, dy: -2, r: 2.5, color: '#bae6fd' },
+          { dx: 0, dy: 2, r: 2.7, color: '#bae6fd', label: 'Alnilam' },
+          { dx: 10, dy: 6, r: 2.5, color: '#bae6fd' },
+          { dx: -24, dy: 44, r: 2.5, color: '#93c5fd' },
+          { dx: 28, dy: 40, r: 3.7, color: '#93c5fd', label: 'Rigel' }
+        ],
+        lines: [[0, 1], [0, 2], [1, 4], [2, 3], [3, 4], [2, 5], [4, 6], [5, 6]]
+      },
+      {
+        name: 'CYGNUS',
+        cx: 0.34,
+        cy: 0.31,
+        stars: [
+          { dx: 0, dy: -36, r: 3.3, color: '#e0f2fe', label: 'Deneb' },
+          { dx: 0, dy: -6, r: 2.7, color: '#fef08a', label: 'Sadr' },
+          { dx: 0, dy: 34, r: 2.5, color: '#fdba74', label: 'Albireo' },
+          { dx: -38, dy: -2, r: 2.4, color: '#bae6fd' },
+          { dx: 38, dy: 4, r: 2.5, color: '#fdba74' }
+        ],
+        lines: [[0, 1], [1, 2], [3, 1], [1, 4]]
+      }
+    ];
+    let constellationDrift = 0;
+    const shootingStars: Array<{ x: number; y: number; vx: number; vy: number; len: number; alpha: number }> = [];
 
     // 4. Interactive Pointer Burst
     const interactiveParticles: ParticleItem[] = [];
@@ -371,11 +441,11 @@ export function AtmosphericCanvas({ weather, className = '', intensity = 1.0 }: 
         ctx.restore();
       }
 
-      // C. Twinkling Night Stars
+      // C. Twinkling Night Stars & Live Constellation Star Patterns in Sky
       if (stars.length > 0) {
         stars.forEach(st => {
           st.alpha += st.delta;
-          if (st.alpha > 0.95 || st.alpha < 0.3) st.delta *= -1;
+          if (st.alpha > 0.95 || st.alpha < 0.2) st.delta *= -1;
 
           ctx.beginPath();
           ctx.arc(st.x, st.y, st.radius, 0, Math.PI * 2);
@@ -385,6 +455,105 @@ export function AtmosphericCanvas({ weather, className = '', intensity = 1.0 }: 
           ctx.fill();
           ctx.shadowBlur = 0;
         });
+      }
+
+      if (showConstellationPatterns) {
+        constellationDrift += 0.035;
+        const baseAlpha = isNight ? 0.78 : isSunset ? 0.62 : 0.44;
+
+        ctx.save();
+        skyConstellations.forEach((con) => {
+          const originX = ((con.cx * width + constellationDrift) % (width + 160)) - 80;
+          const originY = con.cy * Math.min(height, 680);
+
+          // Constellation Filament Lines
+          ctx.strokeStyle = isNight ? 'rgba(56, 189, 248, 0.42)' : 'rgba(254, 240, 138, 0.38)';
+          ctx.lineWidth = 1.25;
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+          con.lines.forEach(([iA, iB]) => {
+            const sA = con.stars[iA];
+            const sB = con.stars[iB];
+            ctx.moveTo(originX + sA.dx, originY + sA.dy);
+            ctx.lineTo(originX + sB.dx, originY + sB.dy);
+          });
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // Constellation Stars & Spectral Halos
+          con.stars.forEach((st) => {
+            const sx = originX + st.dx;
+            const sy = originY + st.dy;
+
+            ctx.beginPath();
+            ctx.arc(sx, sy, st.r * 2.4, 0, Math.PI * 2);
+            ctx.fillStyle = st.color;
+            ctx.globalAlpha = baseAlpha * 0.26;
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(sx, sy, st.r, 0, Math.PI * 2);
+            ctx.fillStyle = st.color;
+            ctx.globalAlpha = baseAlpha;
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = st.color;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            if (st.label) {
+              ctx.font = '600 9px monospace';
+              ctx.fillStyle = 'rgba(248, 250, 252, 0.68)';
+              ctx.globalAlpha = baseAlpha * 0.85;
+              ctx.fillText(st.label, sx + st.r + 4, sy + 3);
+            }
+          });
+
+          // Constellation Title Watermark
+          ctx.font = '800 9px monospace';
+          ctx.fillStyle = isNight ? 'rgba(186, 230, 253, 0.55)' : 'rgba(254, 249, 195, 0.52)';
+          ctx.globalAlpha = baseAlpha;
+          ctx.fillText(`✦ ${con.name}`, originX - 28, originY - 50);
+        });
+
+        // Occasional Shooting Star / Meteor Streak
+        if (Math.random() < 0.005 && shootingStars.length < 2) {
+          shootingStars.push({
+            x: Math.random() * width * 0.8 + width * 0.1,
+            y: Math.random() * height * 0.25 + 20,
+            vx: 6 + Math.random() * 5,
+            vy: 2.5 + Math.random() * 2.5,
+            len: 55 + Math.random() * 45,
+            alpha: 0.95
+          });
+        }
+
+        for (let s = shootingStars.length - 1; s >= 0; s--) {
+          const mt = shootingStars[s];
+          mt.x += mt.vx;
+          mt.y += mt.vy;
+          mt.alpha *= 0.95;
+
+          const tailGrad = ctx.createLinearGradient(
+            mt.x,
+            mt.y,
+            mt.x - mt.vx * 8,
+            mt.y - mt.vy * 8
+          );
+          tailGrad.addColorStop(0, `rgba(254, 240, 138, ${mt.alpha})`);
+          tailGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+
+          ctx.strokeStyle = tailGrad;
+          ctx.lineWidth = 2.0;
+          ctx.beginPath();
+          ctx.moveTo(mt.x, mt.y);
+          ctx.lineTo(mt.x - mt.vx * 8, mt.y - mt.vy * 8);
+          ctx.stroke();
+
+          if (mt.alpha < 0.06) {
+            shootingStars.splice(s, 1);
+          }
+        }
+        ctx.restore();
       }
 
       // D. Towering Cumulonimbus Clouds
@@ -583,7 +752,7 @@ export function AtmosphericCanvas({ weather, className = '', intensity = 1.0 }: 
       window.removeEventListener('mousemove', handlePointerMove);
       window.removeEventListener('touchmove', handleTouchMove);
     };
-  }, [weather, intensity, theme]);
+  }, [weather, intensity, theme, showConstellationPatterns]);
 
   return (
     <canvas 

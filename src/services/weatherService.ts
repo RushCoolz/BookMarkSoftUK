@@ -2,6 +2,7 @@ import {
   WeatherData, 
   LocationData, 
   RadarMetadata, 
+  RadarGridNode,
   ActivitySuitability, 
   CommuterTransitImpact, 
   WardrobeRecommendation, 
@@ -409,7 +410,7 @@ export async function fetchFullWeather(location: LocationData): Promise<WeatherD
   };
 }
 
-// Fetch RainViewer Radar metadata for high-res animated precipitation tiles
+// Fetch RainViewer Radar & Satellite metadata for keyless animated precipitation & IR cloud tiles
 export async function fetchRadarMetadata(): Promise<RadarMetadata | null> {
   try {
     const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
@@ -417,12 +418,69 @@ export async function fetchRadarMetadata(): Promise<RadarMetadata | null> {
     const data = await res.json();
     return {
       host: data.host || 'https://tilecache.rainviewer.com',
-      past: (data.radar?.past || []).slice(-8), // Last 8 scans (last 80 mins)
-      nowcast: (data.radar?.nowcast || []).slice(0, 4) // Next 30 mins
+      past: (data.radar?.past || []).slice(-12), // Last 12 scans (2 hours)
+      nowcast: (data.radar?.nowcast || []).slice(0, 4), // Next 30-40 mins nowcast
+      infrared: (data.satellite?.infrared || []).slice(-10) // Global IR satellite scans
     };
   } catch (err) {
     console.error('Radar metadata error:', err);
     return null;
+  }
+}
+
+// Fetch real-time keyless surrounding sector telemetry (Open-Meteo batch coordinate API)
+export async function fetchRadarSurroundingTelemetry(
+  centerLat: number,
+  centerLon: number
+): Promise<RadarGridNode[]> {
+  const offsets = [
+    { id: 'N', label: 'North Sector', dLat: 0.45, dLon: 0 },
+    { id: 'NE', label: 'North-East Sector', dLat: 0.34, dLon: 0.52 },
+    { id: 'E', label: 'East Sector', dLat: 0, dLon: 0.65 },
+    { id: 'SE', label: 'South-East Sector', dLat: -0.34, dLon: 0.52 },
+    { id: 'S', label: 'South Sector', dLat: -0.45, dLon: 0 },
+    { id: 'SW', label: 'South-West Sector', dLat: -0.34, dLon: -0.52 },
+    { id: 'W', label: 'West Sector', dLat: 0, dLon: -0.65 },
+    { id: 'NW', label: 'North-West Sector', dLat: 0.34, dLon: -0.52 }
+  ];
+
+  const lats = offsets.map((o) => (centerLat + o.dLat).toFixed(4)).join(',');
+  const lons = offsets.map((o) => (centerLon + o.dLon).toFixed(4)).join(',');
+
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&current=temperature_2m,precipitation,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m&hourly=precipitation_probability&forecast_days=1`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Telemetry grid fetch failed');
+    const data = await res.json();
+    const list = Array.isArray(data) ? data : [data];
+
+    return offsets.map((o, idx) => {
+      const item = list[idx] || list[0] || {};
+      const cur = item.current || {};
+      const precip = cur.precipitation ?? 0;
+      const wCode = cur.weather_code ?? 0;
+      const windSpeed = cur.wind_speed_10m ?? 12;
+      const rainProb = item.hourly?.precipitation_probability?.[0] ?? (precip > 0 ? 85 : 15);
+      const isStormCell = wCode >= 80 || precip >= 2.0 || windSpeed >= 40;
+
+      return {
+        id: o.id,
+        label: o.label,
+        lat: centerLat + o.dLat,
+        lon: centerLon + o.dLon,
+        temp: cur.temperature_2m ?? 14,
+        precipitation: precip,
+        rainProb,
+        windSpeed,
+        windDirection: cur.wind_direction_10m ?? 220,
+        weatherCode: wCode,
+        cloudCover: cur.cloud_cover ?? 45,
+        isStormCell
+      };
+    });
+  } catch (err) {
+    console.warn('Fallback radar telemetry grid:', err);
+    return [];
   }
 }
 

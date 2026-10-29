@@ -23,6 +23,8 @@ interface ZenSanctuaryOverlayProps {
   isSoundPlaying: boolean;
   onToggleSound: () => void;
   onOpenSoundMixer: () => void;
+  showConstellationPatterns?: boolean;
+  onToggleConstellations?: () => void;
 }
 
 export function ZenSanctuaryOverlay({
@@ -32,7 +34,9 @@ export function ZenSanctuaryOverlay({
   unit,
   isSoundPlaying,
   onToggleSound,
-  onOpenSoundMixer
+  onOpenSoundMixer,
+  showConstellationPatterns = true,
+  onToggleConstellations
 }: ZenSanctuaryOverlayProps) {
   const { theme, openThemePicker } = useWeatherTheme();
   const [clockStr, setClockStr] = useState<string>('');
@@ -80,12 +84,27 @@ export function ZenSanctuaryOverlay({
               Zen Sanctuary Window · {theme.name}
             </span>
             <span className={`text-[11px] font-semibold ${theme.ui.secondaryText} block`}>
-              {theme.tagline} — Live Atmospheric Immersion
+              {theme.tagline} — Live Atmospheric &amp; Celestial Immersion
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
+          {onToggleConstellations && (
+            <button
+              type="button"
+              onClick={onToggleConstellations}
+              className={`relative overflow-hidden px-4 py-2.5 rounded-2xl text-xs font-black flex items-center gap-2 cursor-pointer transition-all shadow-lg ${
+                showConstellationPatterns
+                  ? `${theme.ui.activePill} ${theme.ui.activePillText}`
+                  : `${theme.ui.cardSurface} ${theme.ui.cardBorder} ${theme.ui.primaryText}`
+              }`}
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>{showConstellationPatterns ? 'Sky Star Patterns: ON' : 'Sky Star Patterns: OFF'}</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={onToggleSound}

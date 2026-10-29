@@ -67,21 +67,21 @@ export function PageLaunchersGrid({
                 <Telescope className="w-6 h-6 drop-shadow" />
               </div>
               <span className={`text-[11px] font-black font-mono ${theme.ui.subheadingText}`}>
-                Lunar &amp; Golden Hour
+                Solar System &amp; Star Dome
               </span>
             </div>
             <div>
               <h3 className={`font-black text-lg ${theme.ui.primaryText} group-hover:${theme.ui.accentText} transition-colors`}>
-                Celestial &amp; Stargazing Observatory
+                Solar System Orrery &amp; Star Patterns
               </h3>
               <p className={`text-xs ${theme.ui.secondaryText} mt-1 leading-relaxed font-semibold`}>
-                Illustrated lunar phase orbital dial, Golden &amp; Blue Hour photography windows, and deep-sky stargazing clarity.
+                Live 8-planet heliocentric J2000 orrery, interactive zenith constellation star dome, lunar phase dial, and meteor shower almanac.
               </p>
             </div>
           </div>
 
           <div className={`relative z-10 pt-4 mt-3 border-t ${theme.ui.dividerBorder} flex items-center justify-between text-xs font-black ${theme.ui.accentText}`}>
-            <span>Enter Celestial Dome</span>
+            <span>Launch Orrery &amp; Planetarium</span>
             <div className={`relative overflow-hidden w-7 h-7 rounded-full ${theme.ui.tileSurface} ${theme.ui.tileBorder} flex items-center justify-center group-hover:translate-x-1 transition-transform`}>
               <ArrowRight className="w-4 h-4 relative z-10" />
             </div>
