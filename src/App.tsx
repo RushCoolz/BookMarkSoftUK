@@ -57,6 +57,18 @@ import { StarPatternSkyDome } from './components/weather/StarPatternSkyDome';
 import { MicroClimateStudio } from './components/weather/MicroClimateStudio';
 import { SoundscapeMixerModal } from './components/weather/SoundscapeMixerModal';
 import { ZenSanctuaryOverlay } from './components/weather/ZenSanctuaryOverlay';
+import { RouteWeatherPlanner } from './components/weather/RouteWeatherPlanner';
+import { AuroraSpaceWeather } from './components/weather/AuroraSpaceWeather';
+import { BarometricPhysiologyTracker } from './components/weather/BarometricPhysiologyTracker';
+import { MarineSwellTideStudio } from './components/weather/MarineSwellTideStudio';
+import { SolarEnergyYieldEstimator } from './components/weather/SolarEnergyYieldEstimator';
+import { ClimateNormalsAnomalyBar } from './components/weather/ClimateNormalsAnomalyBar';
+import { DualCitySplitCompare } from './components/weather/DualCitySplitCompare';
+import { SkySpotterReportFeed } from './components/weather/SkySpotterReportFeed';
+import { AviationMetarDeck } from './components/weather/AviationMetarDeck';
+import { AtmosphericSoundingProfile } from './components/weather/AtmosphericSoundingProfile';
+import { PlanetaryHazardsMonitor } from './components/weather/PlanetaryHazardsMonitor';
+import { CustomRulesAndExportStudio } from './components/weather/CustomRulesAndExportStudio';
 
 function WeatherAppContent() {
   const [currentLocation, setCurrentLocation] = useState<LocationData>(() => {
@@ -441,6 +453,12 @@ function WeatherAppContent() {
                       onScrubChange={setScrubIndex}
                     />
 
+                    {/* Climate Normals & "This Day in History" 30-Year Anomaly Bar */}
+                    <ClimateNormalsAnomalyBar
+                      weather={effectiveWeather}
+                      unit={tempUnit}
+                    />
+
                     <HourlyCurveChart 
                       hourly={effectiveWeather.hourly}
                       unit={tempUnit}
@@ -458,6 +476,27 @@ function WeatherAppContent() {
                       daily={effectiveWeather.daily}
                       unit={tempUnit}
                     />
+
+                    {/* Split-Screen Dual-City Climate & Telemetry Compare */}
+                    <DualCitySplitCompare
+                      primaryWeather={effectiveWeather}
+                      unit={tempUnit}
+                      speedUnit={speedUnit}
+                      scrubIndex={scrubIndex}
+                    />
+
+                    {/* Barometric Pressure Tendency & Migraine / Sinus Forecast */}
+                    <BarometricPhysiologyTracker weather={effectiveWeather} />
+
+                    {/* Custom Weather Alert Rules + 1-Click .ics Calendar & Dossier Export */}
+                    <CustomRulesAndExportStudio
+                      weather={effectiveWeather}
+                      unit={tempUnit}
+                      speedUnit={speedUnit}
+                    />
+
+                    {/* Live USGS Seismic Earthquakes & NASA EONET Planetary Hazards */}
+                    <PlanetaryHazardsMonitor weather={effectiveWeather} />
 
                     {/* Live Heliocentric Solar System Orrery */}
                     <SolarSystemOrrery weather={effectiveWeather} />
@@ -484,9 +523,19 @@ function WeatherAppContent() {
                 {/* ==================================================== */}
                 {activeTab === 'radar' && (
                   <div className="space-y-6 animate-fade-in">
-                    <div className="h-[680px] rounded-3xl overflow-hidden shadow-2xl">
-                      <LiveRadarMap location={effectiveWeather.location} isDarkMode={isDarkMode} />
-                    </div>
+                    <LiveRadarMap location={effectiveWeather.location} isDarkMode={isDarkMode} />
+                    <SkySpotterReportFeed weather={effectiveWeather} />
+                    <RouteWeatherPlanner
+                      originLocation={effectiveWeather.location}
+                      unit={tempUnit}
+                      speedUnit={speedUnit}
+                    />
+                    <AtmosphericSoundingProfile
+                      weather={effectiveWeather}
+                      unit={tempUnit}
+                      speedUnit={speedUnit}
+                    />
+                    <PlanetaryHazardsMonitor weather={effectiveWeather} />
                   </div>
                 )}
 
@@ -494,18 +543,24 @@ function WeatherAppContent() {
                 {/* PAGE 3: CELESTIAL & STARGAZING OBSERVATORY           */}
                 {/* ==================================================== */}
                 {activeTab === 'celestial' && (
-                  <CelestialObservatory
-                    weather={effectiveWeather}
-                    ambientSkyConstellations={showConstellationPatterns}
-                    onToggleAmbientSkyConstellations={() => setShowConstellationPatterns((prev) => !prev)}
-                  />
+                  <div className="space-y-6 animate-fade-in">
+                    <AuroraSpaceWeather weather={effectiveWeather} />
+                    <CelestialObservatory
+                      weather={effectiveWeather}
+                      ambientSkyConstellations={showConstellationPatterns}
+                      onToggleAmbientSkyConstellations={() => setShowConstellationPatterns((prev) => !prev)}
+                    />
+                  </div>
                 )}
 
                 {/* ==================================================== */}
                 {/* PAGE 4: BOTANICAL, PET & HOME MICRO-CLIMATE STUDIO   */}
                 {/* ==================================================== */}
                 {activeTab === 'microclimate' && (
-                  <MicroClimateStudio weather={effectiveWeather} unit={tempUnit} />
+                  <div className="space-y-6 animate-fade-in">
+                    <SolarEnergyYieldEstimator weather={effectiveWeather} />
+                    <MicroClimateStudio weather={effectiveWeather} unit={tempUnit} />
+                  </div>
                 )}
 
                 {/* ==================================================== */}
@@ -517,6 +572,7 @@ function WeatherAppContent() {
                       airQuality={effectiveWeather.airQuality}
                       current={effectiveWeather.current}
                     />
+                    <BarometricPhysiologyTracker weather={effectiveWeather} />
                   </div>
                 )}
 
@@ -525,6 +581,12 @@ function WeatherAppContent() {
                 {/* ==================================================== */}
                 {activeTab === 'commute' && transit && (
                   <div className="space-y-6 animate-fade-in">
+                    <AviationMetarDeck weather={effectiveWeather} />
+                    <RouteWeatherPlanner
+                      originLocation={effectiveWeather.location}
+                      unit={tempUnit}
+                      speedUnit={speedUnit}
+                    />
                     <TransitAndCommuteFeed 
                       transit={transit}
                       locationName={effectiveWeather.location.name}
@@ -537,6 +599,20 @@ function WeatherAppContent() {
                 {/* ==================================================== */}
                 {activeTab === 'outdoor' && (
                   <div className="space-y-6 animate-fade-in">
+                    <MarineSwellTideStudio
+                      weather={effectiveWeather}
+                      unit={tempUnit}
+                    />
+                    <CustomRulesAndExportStudio
+                      weather={effectiveWeather}
+                      unit={tempUnit}
+                      speedUnit={speedUnit}
+                    />
+                    <AtmosphericSoundingProfile
+                      weather={effectiveWeather}
+                      unit={tempUnit}
+                      speedUnit={speedUnit}
+                    />
                     <OutdoorActivityPlanner 
                       activities={activities}
                       locationName={effectiveWeather.location.name}
@@ -612,7 +688,7 @@ function WeatherAppContent() {
 
               <div className={`pt-4 border-t ${theme.ui.dividerBorder} flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] font-medium ${theme.ui.secondaryText}`}>
                 <p>
-                  Telemetry powered by Open-Meteo High-Resolution NWP Models, RainViewer Doppler radar arrays, Copernicus Atmosphere Monitoring Service, and postcodes.io.
+                  Telemetry powered by Open-Meteo High-Resolution NWP Models, Multi-Sector Doppler Synthesis Arrays, Copernicus Atmosphere Monitoring Service, and postcodes.io.
                 </p>
                 <p className="shrink-0 font-mono text-[10px] font-bold">
                   &copy; {new Date().getFullYear()} AETHER ATMOS • {theme.name} World

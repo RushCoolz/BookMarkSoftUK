@@ -47,8 +47,16 @@ export interface HourlyForecastItem {
   windDirection: number;
   windGusts: number;
   cloudCover: number;
+  cloudCoverLow?: number;
+  cloudCoverMid?: number;
+  cloudCoverHigh?: number;
   visibility: number;
   uvIndex: number;
+  pressureMsl?: number;
+  shortwaveRadiation?: number;
+  directRadiation?: number;
+  diffuseRadiation?: number;
+  freezingLevelHeight?: number;
 }
 
 export interface DailyForecastItem {
@@ -107,8 +115,8 @@ export interface RadarMetadata {
 }
 
 export type KeylessRadarLayerId =
-  | 'rainviewer-doppler'
-  | 'rainviewer-infrared'
+  | 'openmeteo-doppler'
+  | 'openmeteo-infrared'
   | 'iem-nexrad'
   | 'iem-water-vapor'
   | 'iem-precip-1h';
@@ -128,6 +136,85 @@ export interface RadarGridNode {
   isStormCell: boolean;
 }
 
+export interface TerrainPointProfile {
+  lat: number;
+  lon: number;
+  elevationM: number;
+  temperatureC: number;
+  windChillC: number;
+  windSpeedKmh: number;
+  windDirectionDeg: number;
+  freezingLevelM: number;
+  snowLineM: number;
+  pressureHpa: number;
+  transect: { distanceKm: number; elevationM: number; tempC: number }[];
+}
+
+export interface RouteWaypointWeather {
+  id: string;
+  label: string;
+  lat: number;
+  lon: number;
+  distanceRatio: number;
+  etaTimeIso: string;
+  etaFormatted: string;
+  temperatureC: number;
+  precipitationMm: number;
+  precipProb: number;
+  windSpeedKmh: number;
+  windDirectionDeg: number;
+  weatherCode: number;
+  headwindKmh: number;
+  crosswindKmh: number;
+  hazardLevel: 'Clear' | 'Caution' | 'Hazardous';
+}
+
+export interface SpaceWeatherTelemetry {
+  kpIndex: number;
+  kpScale: string;
+  solarWindSpeedKms: number;
+  solarWindDensity: number;
+  bzNt: number;
+  auroraLatitudeThreshold: number;
+  localVisibilityPct: number;
+  updatedAt: string;
+  forecast24h: { timeLabel: string; kp: number }[];
+}
+
+export interface MarineTelemetryData {
+  isCoastalOrMarine: boolean;
+  waveHeightM: number;
+  waveDirectionDeg: number;
+  wavePeriodS: number;
+  swellHeightM: number;
+  swellDirectionDeg: number;
+  swellPeriodS: number;
+  seaSurfaceTempC: number;
+  surfRating: 'Flat / Calm' | 'Clean Ankle-Waist' | 'Fun Chest-Head' | 'Heavy / Expert Only';
+  hourlyWaves: {
+    time: string;
+    waveHeightM: number;
+    swellHeightM: number;
+    tideHeightM: number;
+  }[];
+  nextHighTide: string;
+  nextLowTide: string;
+}
+
+export interface ClimateNormalAnomalyData {
+  dateLabel: string;
+  normalMaxC: number;
+  normalMinC: number;
+  normalPrecipMm: number;
+  recordMaxC: number;
+  recordMaxYear: number;
+  recordMinC: number;
+  recordMinYear: number;
+  tempAnomalyC: number;
+  precipAnomalyMm: number;
+  historicalYearsSampled: number;
+  eraSeries: { year: number; maxTempC: number; minTempC: number }[];
+}
 
 export interface ActivitySuitability {
   id: string;
@@ -187,3 +274,68 @@ export interface SevereAlert {
   validUntil: string;
   recommendedAction: string;
 }
+
+export interface UpperAirLevel {
+  pressureHpa: number;
+  altitudeM: number;
+  altitudeFt: number;
+  layerName: string;
+  temperatureC: number;
+  dewPointC: number;
+  windSpeedKmh: number;
+  windDirectionDeg: number;
+}
+
+export interface AtmosphericSoundingData {
+  capeJkg: number;
+  liftedIndex: number;
+  convectiveRisk: 'Stable' | 'Marginal Instability' | 'Moderate Convective' | 'Severe Supercell Risk';
+  tropopauseTempC: number;
+  maxJetStreamKmh: number;
+  levels: UpperAirLevel[];
+}
+
+export interface EarthquakeEvent {
+  id: string;
+  magnitude: number;
+  place: string;
+  timeMs: number;
+  depthKm: number;
+  latitude: number;
+  longitude: number;
+  distanceKm: number;
+}
+
+export interface NasaEonetEvent {
+  id: string;
+  title: string;
+  category: 'Wildfires' | 'Volcanoes' | 'Severe Storms' | 'Sea and Lake Ice' | 'Other';
+  dateIso: string;
+  latitude: number;
+  longitude: number;
+  distanceKm: number;
+}
+
+export interface SkySpotterReport {
+  id: string;
+  type: 'rain-hail' | 'wind-gust' | 'sky-optic' | 'road-hazard' | 'clear-sky';
+  title: string;
+  note: string;
+  reporter: string;
+  timestamp: string;
+  lat: number;
+  lon: number;
+  verifiedCount: number;
+}
+
+export interface CustomWeatherRule {
+  id: string;
+  name: string;
+  metric: 'temperature' | 'windSpeed' | 'precipitation' | 'cloudCover' | 'uvIndex';
+  operator: '<' | '>' | '<=' | '>=';
+  threshold: number;
+  unitLabel: string;
+  enabled: boolean;
+}
+
+
