@@ -92,25 +92,25 @@ export function WeatherHeader({
       {/* Subtle Thematic Illustrated Header Ribbon */}
       <ThemeCardArtWrapper theme={theme} variant="compact" showCornerFiligrees={false} className="opacity-55" />
 
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-3">
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8">
+        <div className="flex flex-wrap items-center justify-between min-h-14 sm:min-h-16 py-1.5 sm:py-2 gap-x-2 gap-y-1.5">
           
           {/* Zone 1: Brand Wordmark */}
-          <div className="flex items-center gap-2.5 shrink-0">
-            <div className={`w-10 h-10 rounded-2xl ${theme.ui.activePill} p-0.5 shadow-md flex items-center justify-center ${theme.ui.activePillText}`}>
-              <CloudSun className="w-6 h-6 drop-shadow" />
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 min-w-0">
+            <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl ${theme.ui.activePill} p-0.5 shadow-md flex items-center justify-center shrink-0 ${theme.ui.activePillText}`}>
+              <CloudSun className="w-5 h-5 sm:w-6 sm:h-6 drop-shadow" />
             </div>
-            <div className="flex flex-col">
+            <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className={`font-black text-base tracking-tight ${theme.ui.primaryText}`}>
+                <span className={`font-black text-sm sm:text-base tracking-tight leading-none ${theme.ui.primaryText}`}>
                   AETHER
                 </span>
-                <span className={`text-[10px] font-black uppercase tracking-widest ${theme.ui.subheadingText} font-mono`}>
+                <span className={`hidden sm:inline text-[10px] font-black uppercase tracking-widest ${theme.ui.subheadingText} font-mono`}>
                   · {isAutoThemeSync ? 'LIVING SKY' : 'OBSERVATORY'}
                 </span>
               </div>
-              <span className={`text-[10px] ${theme.ui.secondaryText} font-bold`}>
-                {theme.name} World
+              <span className={`text-[9px] sm:text-[10px] ${theme.ui.secondaryText} font-bold truncate max-w-[88px] sm:max-w-none leading-tight mt-0.5`}>
+                {theme.name}
               </span>
             </div>
           </div>
@@ -137,27 +137,27 @@ export function WeatherHeader({
             })}
           </nav>
 
-          {/* Zone 3: Trailing Utility Actions */}
-          <div className="flex items-center gap-1.5">
+          {/* Zone 3: Trailing Utility Actions (Compact & Responsive on Mobile Portrait) */}
+          <div className="flex items-center justify-end gap-1 sm:gap-1.5 ml-auto shrink-0">
             
             {/* Severe Weather Alert Badge if active */}
             {alertCount > 0 && onOpenAlerts && (
               <button
                 onClick={onOpenAlerts}
-                className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-500/30 text-amber-950 dark:text-amber-200 border border-amber-400/60 text-xs font-black animate-pulse hover:bg-amber-500/40 transition-all cursor-pointer shadow-sm"
+                className="flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-xl bg-amber-500/30 text-amber-950 dark:text-amber-200 border border-amber-400/60 text-[11px] sm:text-xs font-black animate-pulse hover:bg-amber-500/40 transition-all cursor-pointer shadow-sm shrink-0"
                 title={`${alertCount} active severe weather advisory`}
               >
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-300" />
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-300 shrink-0" />
                 <span>{alertCount}</span>
               </button>
             )}
 
             {/* Atmospheric Soundscape Equalizer Toggle + Mixer Button */}
             {onToggleSound && (
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 shrink-0">
                 <button
                   onClick={onToggleSound}
-                  className={`relative overflow-hidden flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-all cursor-pointer shadow-sm ${
+                  className={`relative overflow-hidden flex items-center justify-center gap-1.5 p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl border transition-all cursor-pointer shadow-sm shrink-0 ${
                     isSoundPlaying
                       ? `${theme.ui.activePill} ${theme.ui.activePillText} font-black`
                       : `${theme.ui.tileSurface} ${theme.ui.tileBorder} ${theme.ui.tileHover} ${theme.ui.primaryText}`
@@ -167,7 +167,7 @@ export function WeatherHeader({
                 >
                   {!isSoundPlaying && <ThemeTileArt theme={theme} variant="pill" index={0} />}
                   {isSoundPlaying ? <Volume2 className="relative z-10 w-4 h-4 text-amber-50 animate-pulse" /> : <VolumeX className="relative z-10 w-4 h-4" />}
-                  <div className="relative z-10 flex items-end gap-0.5 h-3.5 w-3.5 pb-0.5">
+                  <div className="relative z-10 hidden sm:flex items-end gap-0.5 h-3.5 w-3.5 pb-0.5">
                     {soundLevels.slice(0, 4).map((lvl, idx) => (
                       <div
                         key={idx}
@@ -185,7 +185,7 @@ export function WeatherHeader({
                 {onOpenSoundMixer && (
                   <button
                     onClick={onOpenSoundMixer}
-                    className={`relative overflow-hidden p-2 rounded-xl ${theme.ui.tileSurface} ${theme.ui.tileBorder} ${theme.ui.tileHover} ${theme.ui.primaryText} transition-all cursor-pointer shadow-sm active:scale-95`}
+                    className={`relative overflow-hidden p-1.5 sm:p-2 rounded-xl ${theme.ui.tileSurface} ${theme.ui.tileBorder} ${theme.ui.tileHover} ${theme.ui.primaryText} transition-all cursor-pointer shadow-sm active:scale-95 shrink-0`}
                     title="Open 5-Channel Soundscape Mixer"
                     aria-label="Open soundscape mixer"
                   >
@@ -200,7 +200,7 @@ export function WeatherHeader({
             {onEnterZenMode && (
               <button
                 onClick={onEnterZenMode}
-                className={`relative overflow-hidden hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl ${theme.ui.tileSurface} ${theme.ui.tileBorder} ${theme.ui.tileHover} ${theme.ui.primaryText} text-xs font-black transition-all cursor-pointer shadow-sm active:scale-95`}
+                className={`relative overflow-hidden hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl ${theme.ui.tileSurface} ${theme.ui.tileBorder} ${theme.ui.tileHover} ${theme.ui.primaryText} text-xs font-black transition-all cursor-pointer shadow-sm active:scale-95 shrink-0`}
                 title="Enter Fullscreen Zen Window ('Look Outside')"
                 aria-label="Enter Zen Window Mode"
               >
@@ -213,19 +213,18 @@ export function WeatherHeader({
             {/* Modular Theme Selector Button */}
             <button
               onClick={openThemePicker}
-              className={`relative overflow-hidden flex items-center gap-1.5 px-3 py-1.5 rounded-xl ${theme.ui.activePill} ${theme.ui.activePillText} text-xs font-black transition-all cursor-pointer shadow-md active:scale-95 group`}
+              className={`relative overflow-hidden flex items-center justify-center gap-1 px-2 py-1.5 sm:px-3 sm:py-1.5 rounded-xl ${theme.ui.activePill} ${theme.ui.activePillText} text-xs font-black transition-all cursor-pointer shadow-md active:scale-95 group shrink-0`}
               title={`Active Atmosphere: ${theme.name}. Click to switch theme or toggle Auto-Sync.`}
               aria-label="Change visual theme"
             >
-              <Palette className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" />
+              <Palette className="w-4 h-4 sm:w-3.5 sm:h-3.5 group-hover:rotate-12 transition-transform shrink-0" />
               <span className="hidden sm:inline font-mono text-[11px] font-black">{theme.name}</span>
-              <span className="sm:hidden font-mono text-[11px]">Theme</span>
             </button>
 
             {/* Temp Unit Switcher (°C / °F) */}
             <button
               onClick={onToggleTempUnit}
-              className={`relative overflow-hidden px-2.5 py-1.5 rounded-xl text-xs font-mono font-black ${theme.ui.tileSurface} ${theme.ui.tileBorder} ${theme.ui.tileHover} ${theme.ui.primaryText} transition-all cursor-pointer shadow-sm active:scale-95`}
+              className={`relative overflow-hidden px-2 py-1.5 sm:px-2.5 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-mono font-black ${theme.ui.tileSurface} ${theme.ui.tileBorder} ${theme.ui.tileHover} ${theme.ui.primaryText} transition-all cursor-pointer shadow-sm active:scale-95 shrink-0`}
               title="Toggle Celsius / Fahrenheit"
             >
               <ThemeTileArt theme={theme} variant="pill" index={3} />
@@ -235,7 +234,7 @@ export function WeatherHeader({
             {/* Speed Unit Switcher (mph / km/h) */}
             <button
               onClick={onToggleSpeedUnit}
-              className={`relative overflow-hidden hidden md:inline-flex px-2.5 py-1.5 rounded-xl text-xs font-mono font-black ${theme.ui.tileSurface} ${theme.ui.tileBorder} ${theme.ui.tileHover} ${theme.ui.primaryText} transition-all cursor-pointer shadow-sm active:scale-95`}
+              className={`relative overflow-hidden hidden md:inline-flex px-2.5 py-1.5 rounded-xl text-xs font-mono font-black ${theme.ui.tileSurface} ${theme.ui.tileBorder} ${theme.ui.tileHover} ${theme.ui.primaryText} transition-all cursor-pointer shadow-sm active:scale-95 shrink-0`}
               title="Toggle Wind Speed Unit"
             >
               <ThemeTileArt theme={theme} variant="pill" index={4} />
@@ -246,7 +245,7 @@ export function WeatherHeader({
             <button
               onClick={onRefresh}
               disabled={isRefreshing}
-              className={`relative overflow-hidden p-2 rounded-xl ${theme.ui.primaryText} ${theme.ui.tileSurface} ${theme.ui.tileBorder} ${theme.ui.tileHover} transition-transform shadow-sm cursor-pointer ${
+              className={`relative overflow-hidden p-1.5 sm:p-2 rounded-xl ${theme.ui.primaryText} ${theme.ui.tileSurface} ${theme.ui.tileBorder} ${theme.ui.tileHover} transition-transform shadow-sm cursor-pointer shrink-0 ${
                 isRefreshing ? 'animate-spin' : 'hover:scale-105 active:scale-95'
               }`}
               title="Refresh live atmospheric data"
@@ -259,7 +258,7 @@ export function WeatherHeader({
             {/* Dark Mode Toggle */}
             <button
               onClick={onToggleDarkMode}
-              className={`relative overflow-hidden p-2 rounded-xl ${theme.ui.primaryText} ${theme.ui.tileSurface} ${theme.ui.tileBorder} ${theme.ui.tileHover} transition-transform hover:scale-105 active:scale-95 cursor-pointer`}
+              className={`relative overflow-hidden p-1.5 sm:p-2 rounded-xl ${theme.ui.primaryText} ${theme.ui.tileSurface} ${theme.ui.tileBorder} ${theme.ui.tileHover} transition-transform hover:scale-105 active:scale-95 cursor-pointer shrink-0`}
               title="Toggle dark / light mode"
               aria-label="Toggle theme"
             >
@@ -270,7 +269,7 @@ export function WeatherHeader({
             {/* Mobile/Tablet Hamburger Menu */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className={`relative overflow-hidden xl:hidden p-2 rounded-xl ${theme.ui.primaryText} ${theme.ui.tileSurface} ${theme.ui.tileBorder}`}
+              className={`relative overflow-hidden xl:hidden p-1.5 sm:p-2 rounded-xl ${theme.ui.primaryText} ${theme.ui.tileSurface} ${theme.ui.tileBorder} cursor-pointer shrink-0`}
               aria-label="Toggle mobile menu"
             >
               <ThemeTileArt theme={theme} variant="pill" index={1} />
@@ -279,31 +278,70 @@ export function WeatherHeader({
           </div>
         </div>
 
-        {/* Mobile/Tablet Dropdown Navigation */}
+        {/* Mobile/Tablet Dropdown Navigation & Quick Controls */}
         {mobileMenuOpen && (
-          <div className={`xl:hidden py-3 border-t ${theme.ui.dividerBorder} grid grid-cols-2 sm:grid-cols-4 gap-1.5 pb-4 animate-fade-in`}>
-            {tabs.map((tab, idx) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              return (
+          <div className={`xl:hidden py-3 border-t ${theme.ui.dividerBorder} space-y-3 pb-4 animate-fade-in`}>
+            {/* Navigation Tabs Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+              {tabs.map((tab, idx) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => {
+                      onSelectTab(tab.id);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`relative overflow-hidden flex items-center gap-2 p-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                      isActive
+                        ? `${theme.ui.activePill} ${theme.ui.activePillText}`
+                        : `${theme.ui.tileSurface} ${theme.ui.tileBorder} ${theme.ui.primaryText}`
+                    }`}
+                  >
+                    {!isActive && <ThemeTileArt theme={theme} variant="pill" index={idx} />}
+                    <Icon className="relative z-10 w-4 h-4 shrink-0" />
+                    <span className="relative z-10 truncate">{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Mobile Quick Utility Actions (Full labels for Themes, Sound, Zen Mode, Wind Unit, Dark Mode) */}
+            <div className={`pt-2.5 border-t ${theme.ui.dividerBorder} grid grid-cols-2 sm:grid-cols-3 gap-1.5`}>
+              <button
+                onClick={() => {
+                  openThemePicker();
+                  setMobileMenuOpen(false);
+                }}
+                className={`relative overflow-hidden flex items-center justify-center gap-2 p-2 rounded-xl text-xs font-black ${theme.ui.activePill} ${theme.ui.activePillText} shadow-sm cursor-pointer`}
+              >
+                <Palette className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">Theme: {theme.name}</span>
+              </button>
+
+              <button
+                onClick={onToggleSpeedUnit}
+                className={`relative overflow-hidden flex items-center justify-center gap-2 p-2 rounded-xl text-xs font-mono font-black ${theme.ui.tileSurface} ${theme.ui.tileBorder} ${theme.ui.primaryText} cursor-pointer`}
+              >
+                <ThemeTileArt theme={theme} variant="pill" index={4} />
+                <span className="relative z-10">Wind: {speedUnit.toUpperCase()}</span>
+              </button>
+
+              {onEnterZenMode && (
                 <button
-                  key={tab.id}
                   onClick={() => {
-                    onSelectTab(tab.id);
+                    onEnterZenMode();
                     setMobileMenuOpen(false);
                   }}
-                  className={`relative overflow-hidden flex items-center gap-2 p-2.5 rounded-xl text-xs font-black transition-all ${
-                    isActive
-                      ? `${theme.ui.activePill} ${theme.ui.activePillText}`
-                      : `${theme.ui.tileSurface} ${theme.ui.tileBorder} ${theme.ui.primaryText}`
-                  }`}
+                  className={`relative overflow-hidden flex items-center justify-center gap-2 p-2 rounded-xl text-xs font-black ${theme.ui.tileSurface} ${theme.ui.tileBorder} ${theme.ui.primaryText} cursor-pointer col-span-2 sm:col-span-1`}
                 >
-                  {!isActive && <ThemeTileArt theme={theme} variant="pill" index={idx} />}
-                  <Icon className="relative z-10 w-4 h-4 shrink-0" />
-                  <span className="relative z-10 truncate">{tab.label}</span>
+                  <ThemeTileArt theme={theme} variant="pill" index={2} />
+                  <Maximize2 className="relative z-10 w-3.5 h-3.5 shrink-0" />
+                  <span className="relative z-10">Fullscreen Zen Window</span>
                 </button>
-              );
-            })}
+              )}
+            </div>
           </div>
         )}
       </div>

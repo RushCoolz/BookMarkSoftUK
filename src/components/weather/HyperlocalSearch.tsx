@@ -157,8 +157,8 @@ export function HyperlocalSearch({ currentLocation, onSelectLocation, className 
           }}
           onFocus={() => setIsOpen(true)}
           onKeyDown={handleKeyDown}
-          placeholder="Search town, city, UK postcode (e.g. SW1A 1AA, Edinburgh, Zurich)..."
-          className={`relative z-10 w-full pl-3 pr-32 py-3.5 bg-transparent ${theme.ui.primaryText} placeholder:opacity-70 text-sm font-bold focus:outline-none transition-all`}
+          placeholder="Search city, town, or postcode (e.g. SW1A 1AA, Zurich)..."
+          className={`relative z-10 w-full pl-2.5 sm:pl-3 pr-24 sm:pr-32 py-3 sm:py-3.5 bg-transparent ${theme.ui.primaryText} placeholder:opacity-70 text-xs sm:text-sm font-bold focus:outline-none transition-all`}
           aria-label="Hyperlocal weather search"
         />
 
@@ -170,7 +170,7 @@ export function HyperlocalSearch({ currentLocation, onSelectLocation, className 
               setResults([]);
               inputRef.current?.focus();
             }}
-            className={`relative z-10 mr-28 p-1.5 rounded-full ${theme.ui.secondaryText} hover:${theme.ui.primaryText} cursor-pointer`}
+            className={`relative z-10 mr-20 sm:mr-28 p-1.5 rounded-full ${theme.ui.secondaryText} hover:${theme.ui.primaryText} cursor-pointer`}
             aria-label="Clear search"
           >
             <X className="w-3.5 h-3.5" />
@@ -182,7 +182,7 @@ export function HyperlocalSearch({ currentLocation, onSelectLocation, className 
           type="button"
           onClick={handleUseGeolocation}
           disabled={isLocating}
-          className={`clay-button absolute right-2.5 z-10 px-3.5 py-2 rounded-2xl ${theme.ui.activePill} ${theme.ui.activePillText} text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 shadow-md active:scale-95`}
+          className={`clay-button absolute right-2 sm:right-2.5 z-10 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl ${theme.ui.activePill} ${theme.ui.activePillText} text-[11px] sm:text-xs font-black flex items-center gap-1 sm:gap-1.5 transition-all cursor-pointer disabled:opacity-50 shadow-md active:scale-95`}
           title="Use device GPS location"
         >
           {isLocating ? (
@@ -190,7 +190,7 @@ export function HyperlocalSearch({ currentLocation, onSelectLocation, className 
           ) : (
             <Navigation className="w-3.5 h-3.5" />
           )}
-          <span>{isLocating ? 'Locating...' : 'My GPS'}</span>
+          <span>{isLocating ? 'GPS...' : 'My GPS'}</span>
         </button>
       </div>
 
