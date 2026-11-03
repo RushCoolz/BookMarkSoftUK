@@ -1,46 +1,23 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AETHER ATMOS - Planetary Weather &amp; Lifestyle Intelligence</title>
-    <meta name="description" content="Hyperlocal weather search, dynamic Doppler radar maps, hourly &amp; 10-day outlooks, pollen &amp; UV indices, transit delay feeds, and event planning intelligence." />
-    <meta property="og:title" content="AETHER ATMOS - Planetary Weather &amp; Lifestyle Intelligence" />
-    <meta property="og:description" content="Hyperlocal weather search, dynamic Doppler radar maps, hourly &amp; 10-day outlooks, pollen &amp; UV indices, transit delay feeds, and event planning intelligence." />
+    <title>TERMUX QUANT // ARROW PRICE-VOLUME TERMINAL</title>
+    <meta name="description" content="Termux Quant Arrow Price-Volume Terminal. Real-time institutional quant signals, arrow volume delta flow, orderbook depth, bot vault, whale scanner, and automated execution." />
+    <meta property="og:title" content="TERMUX QUANT // ARROW PRICE-VOLUME TERMINAL" />
+    <meta property="og:description" content="Termux Quant Arrow Price-Volume Terminal. Real-time institutional quant signals, arrow volume delta flow, orderbook depth, bot vault, whale scanner, and automated execution." />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="AETHER ATMOS" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="AETHER ATMOS - Planetary Weather &amp; Lifestyle Intelligence" />
-    <meta name="twitter:description" content="Hyperlocal weather search, dynamic Doppler radar maps, hourly &amp; 10-day outlooks, pollen &amp; UV indices, transit delay feeds, and event planning intelligence." />
-
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><path d='M12 2v2'/><path d='M12 20v2'/><path d='m4.93 4.93 1.41 1.41'/><path d='m17.66 17.66 1.41 1.41'/><path d='M2 12h2'/><path d='M20 12h2'/><path d='m6.34 17.66-1.41 1.41'/><path d='m19.07 4.93-1.41 1.41'/></svg>" />
+    <meta name="twitter:title" content="TERMUX QUANT // ARROW PRICE-VOLUME TERMINAL" />
+    <meta name="twitter:description" content="Termux Quant Arrow Price-Volume Terminal. Real-time institutional quant signals, arrow volume delta flow, orderbook depth, bot vault, whale scanner, and automated execution." />
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    
-    <!-- Schema.org JSON-LD -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "AETHER ATMOS",
-      "applicationCategory": "WeatherApplication",
-      "operatingSystem": "All",
-      "description": "Hyperlocal global weather search, animated Doppler radar, pollen and air quality indices, road commuter transit warnings, and outdoor event planning intelligence."
-    }
-    </script>
-
-    <script>
-      try {
-        const theme = localStorage.getItem('theme');
-        if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-          document.documentElement.classList.add('dark');
-        }
-      } catch (e) {}
-    </script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700;800&display=swap" rel="stylesheet">
   </head>
-  <body class="w-full min-h-screen m-0 p-0 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased selection:bg-blue-500 selection:text-white">
-    <div id="root" class="w-full min-h-screen flex flex-col"></div>
+  <body class="bg-black text-white font-mono antialiased selection:bg-white selection:text-black min-h-screen">
+    <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

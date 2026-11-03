@@ -1,734 +1,554 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { 
-  CloudSun, 
-  AlertTriangle,
-  Loader2
+import React, { useState, useMemo, useEffect } from 'react';
+import {
+  ASSETS,
+  generateArrowBars,
+  getAssetFundamentals,
+  NEWS_FORECAST_DATA,
+  TRADING_SIGNALS,
+  FREE_BOTS,
+  HISTORICAL_SIGNALS
+} from './data/marketData';
+import { Asset, UserProfile } from './types';
+import { TerminalHeader } from './components/TerminalHeader';
+import { ArrowVolumeChart } from './components/ArrowVolumeChart';
+import { SimpleFundamentals } from './components/SimpleFundamentals';
+import { NewsForecastTable } from './components/NewsForecastTable';
+import { SignalAlertCard } from './components/SignalAlertCard';
+import { BotVaultModal } from './components/BotVaultModal';
+import { InstrumentsExplorer } from './components/InstrumentsExplorer';
+import { DocumentationView } from './components/DocumentationView';
+import { RiskCalculator } from './components/RiskCalculator';
+import { WhaleScanner } from './components/WhaleScanner';
+import { TradingJournal } from './components/TradingJournal';
+import { UserDashboard } from './components/UserDashboard';
+import { AuthModal } from './components/AuthModal';
+import { LegalModal } from './components/LegalModal';
+import { sound } from './utils/audio';
+import {
+  TrendingUp,
+  BarChart2,
+  Calendar,
+  Smartphone,
+  Cpu,
+  Layers,
+  HelpCircle,
+  Shield,
+  Terminal as TerminalIcon,
+  ShieldAlert,
+  Lock,
+  FileText,
+  Calculator,
+  Zap,
+  BookOpen,
+  User,
+  History
 } from 'lucide-react';
 
-import { 
-  WeatherData, 
-  LocationData, 
-  TempUnit, 
-  SpeedUnit, 
-  SevereAlert,
-  HourlyForecastItem 
-} from './types/weather';
-import { 
-  DEFAULT_LOCATION, 
-  fetchFullWeather, 
-  deriveSevereAlerts, 
-  deriveActivitySuitabilities, 
-  deriveTransitImpact, 
-  deriveWardrobeRecommendations,
-  decodeWmoCode
-} from './services/weatherService';
-import { soundscape } from './services/soundscapeService';
+export type NavPage =
+  | 'CHART'
+  | 'JOURNAL'
+  | 'DASHBOARD'
+  | 'SCANNER'
+  | 'CALCULATOR'
+  | 'INSTRUMENTS'
+  | 'FUNDAMENTALS'
+  | 'NEWS'
+  | 'SIGNALS'
+  | 'BOTS'
+  | 'DOCS'
+  | 'ALL';
 
-// Weather Components
-import { WeatherHeader, WeatherSectionTab } from './components/weather/WeatherHeader';
-import { AtmosphericCanvas } from './components/weather/AtmosphericCanvas';
-import { HyperlocalSearch } from './components/weather/HyperlocalSearch';
-import { CurrentHero } from './components/weather/CurrentHero';
-import { HourlyForecastSlider } from './components/weather/HourlyForecastSlider';
-import { HourlyCurveChart } from './components/weather/HourlyCurveChart';
-import { DailyForecastOutlook } from './components/weather/DailyForecastOutlook';
-import { LiveRadarMap } from './components/weather/LiveRadarMap';
-import { PollenAndAirQuality } from './components/weather/PollenAndAirQuality';
-import { TransitAndCommuteFeed } from './components/weather/TransitAndCommuteFeed';
-import { OutdoorActivityPlanner } from './components/weather/OutdoorActivityPlanner';
-import { SmartWardrobePrompts } from './components/weather/SmartWardrobePrompts';
-import { SevereWeatherAlertsModal } from './components/weather/SevereWeatherAlertsModal';
-import { PageNavigationBanner } from './components/weather/PageNavigationBanner';
-import { PageLaunchersGrid } from './components/weather/PageLaunchersGrid';
-import { FloatingPageDock } from './components/weather/FloatingPageDock';
-import { WeatherThemeProvider, useWeatherTheme } from './context/WeatherThemeContext';
-import { ThemeSelectorModal } from './components/weather/ThemeSelectorModal';
-import { ThemeCardArtWrapper } from './components/weather/ThemeCardArtWrapper';
-import { WorldPostcardDeck } from './components/weather/WorldPostcardDeck';
-import { TimeTravelScrubber } from './components/weather/TimeTravelScrubber';
-import { CelestialObservatory } from './components/weather/CelestialObservatory';
-import { SolarSystemOrrery } from './components/weather/SolarSystemOrrery';
-import { StarPatternSkyDome } from './components/weather/StarPatternSkyDome';
-import { MicroClimateStudio } from './components/weather/MicroClimateStudio';
-import { SoundscapeMixerModal } from './components/weather/SoundscapeMixerModal';
-import { ZenSanctuaryOverlay } from './components/weather/ZenSanctuaryOverlay';
-import { RouteWeatherPlanner } from './components/weather/RouteWeatherPlanner';
-import { AuroraSpaceWeather } from './components/weather/AuroraSpaceWeather';
-import { BarometricPhysiologyTracker } from './components/weather/BarometricPhysiologyTracker';
-import { MarineSwellTideStudio } from './components/weather/MarineSwellTideStudio';
-import { SolarEnergyYieldEstimator } from './components/weather/SolarEnergyYieldEstimator';
-import { ClimateNormalsAnomalyBar } from './components/weather/ClimateNormalsAnomalyBar';
-import { DualCitySplitCompare } from './components/weather/DualCitySplitCompare';
-import { SkySpotterReportFeed } from './components/weather/SkySpotterReportFeed';
-import { AviationMetarDeck } from './components/weather/AviationMetarDeck';
-import { AtmosphericSoundingProfile } from './components/weather/AtmosphericSoundingProfile';
-import { PlanetaryHazardsMonitor } from './components/weather/PlanetaryHazardsMonitor';
-import { CustomRulesAndExportStudio } from './components/weather/CustomRulesAndExportStudio';
+export const App: React.FC = () => {
+  const [selectedAsset, setSelectedAsset] = useState<Asset>(ASSETS[0]);
+  const [timeframe, setTimeframe] = useState<string>('1H');
+  const [activePage, setActivePage] = useState<NavPage>('CHART');
+  
+  // User Authentication State
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
 
-function WeatherAppContent() {
-  const [currentLocation, setCurrentLocation] = useState<LocationData>(() => {
-    try {
-      const saved = localStorage.getItem('aether_saved_loc');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return DEFAULT_LOCATION;
-  });
+  // Legal Modal State
+  const [legalModalOpen, setLegalModalOpen] = useState(false);
+  const [legalTab, setLegalTab] = useState<'DISCLAIMER' | 'PRIVACY' | 'TERMS'>('DISCLAIMER');
 
-  const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
-
-  // 24-Hour Time-Travel Scrubber Index (0 = Live Now, 1..23 = future hours)
-  const [scrubIndex, setScrubIndex] = useState<number>(0);
-
-  // Zen Sanctuary Fullscreen Mode, Soundscape Mixer Modal & Ambient Sky Constellation Patterns
-  const [isZenMode, setIsZenMode] = useState<boolean>(false);
-  const [isSoundMixerOpen, setIsSoundMixerOpen] = useState<boolean>(false);
-  const [showConstellationPatterns, setShowConstellationPatterns] = useState<boolean>(true);
-
-  // Preference Settings
-  const [tempUnit, setTempUnit] = useState<TempUnit>(() => {
-    try {
-      return (localStorage.getItem('aether_temp_unit') as TempUnit) || 'celsius';
-    } catch {
-      return 'celsius';
+  // Load user from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('arrow_quant_user');
+    if (saved) {
+      try {
+        setUser(JSON.parse(saved));
+      } catch {
+        // Fallback
+      }
     }
-  });
+  }, []);
 
-  const [speedUnit, setSpeedUnit] = useState<SpeedUnit>(() => {
-    try {
-      return (localStorage.getItem('aether_speed_unit') as SpeedUnit) || 'mph';
-    } catch {
-      return 'mph';
-    }
-  });
-
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('theme');
-      if (saved) return saved === 'dark';
-      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    }
-    return true;
-  });
-
-  // URL Hash Based Multi-Page Navigation
-  const getTabFromHash = (): WeatherSectionTab => {
-    if (typeof window === 'undefined') return 'overview';
-    const hash = window.location.hash.replace('#', '').toLowerCase();
-    if (hash === 'radar') return 'radar';
-    if (hash === 'celestial' || hash === 'astronomy') return 'celestial';
-    if (hash === 'microclimate' || hash === 'botanical') return 'microclimate';
-    if (hash === 'air-pollen' || hash === 'pollen') return 'air-pollen';
-    if (hash === 'commute' || hash === 'transit') return 'commute';
-    if (hash === 'outdoor' || hash === 'activities') return 'outdoor';
-    if (hash === 'wardrobe' || hash === 'clothing') return 'wardrobe';
-    return 'overview';
+  const handleLogin = (newUser: UserProfile) => {
+    setUser(newUser);
+    localStorage.setItem('arrow_quant_user', JSON.stringify(newUser));
   };
 
-  const [activeTab, setActiveTabState] = useState<WeatherSectionTab>(getTabFromHash);
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('arrow_quant_user');
+  };
 
-  const navigateToPage = (tab: WeatherSectionTab) => {
-    setActiveTabState(tab);
-    const hash = tab === 'overview' ? 'forecast' : tab;
-    if (window.location.hash !== `#${hash}`) {
-      window.location.hash = hash;
-    }
+  // Handle URL hash navigation for clean browser history and bookmarking
+  useEffect(() => {
+    const handleHash = () => {
+      const hash = window.location.hash.replace('#', '').toUpperCase();
+      if (
+        [
+          'CHART',
+          'JOURNAL',
+          'DASHBOARD',
+          'SCANNER',
+          'CALCULATOR',
+          'INSTRUMENTS',
+          'FUNDAMENTALS',
+          'NEWS',
+          'SIGNALS',
+          'BOTS',
+          'DOCS',
+          'ALL',
+        ].includes(hash)
+      ) {
+        setActivePage(hash as NavPage);
+      }
+    };
+
+    handleHash();
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
+
+  const navigateTo = (page: NavPage) => {
+    sound.playClick();
+    setActivePage(page);
+    window.location.hash = page.toLowerCase();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  useEffect(() => {
-    const handleHashChange = () => {
-      setActiveTabState(getTabFromHash());
-    };
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
-
-  // Selected hour for interactive timeline exploration
-  const [selectedHour, setSelectedHour] = useState<HourlyForecastItem | undefined>(undefined);
-
-  // Severe Alert Dialog
-  const [showAlertModal, setShowAlertModal] = useState<boolean>(false);
-
-  // Atmospheric Soundscape State
-  const [isSoundPlaying, setIsSoundPlaying] = useState<boolean>(false);
-  const [soundLevels, setSoundLevels] = useState<number[]>([0.2, 0.4, 0.3, 0.5]);
-
-  useEffect(() => {
-    soundscape.setVisualizerCallback((levels) => {
-      setSoundLevels(levels);
-    });
-  }, []);
-
-  // Compute Effective Weather when user scrubs the 24-Hour Time-Travel Scrubber
-  const effectiveWeather: WeatherData | null = useMemo(() => {
-    if (!weather) return null;
-    if (scrubIndex === 0 || !weather.hourly || weather.hourly.length === 0) {
-      return weather;
-    }
-    const currentIsoPrefix = weather.current.time.slice(0, 13);
-    const startIdx = Math.max(
-      0,
-      weather.hourly.findIndex((h) => h.time.startsWith(currentIsoPrefix))
-    );
-    const targetHour = weather.hourly[Math.min(weather.hourly.length - 1, startIdx + scrubIndex)];
-    if (!targetHour) return weather;
-
-    const hourPart = targetHour.time.includes('T') ? targetHour.time.split('T')[1] : targetHour.time;
-    const hourNum = parseInt(hourPart.split(':')[0], 10) || 12;
-    const isDayScrubbed = hourNum >= 6 && hourNum < 20 ? 1 : 0;
-
-    return {
-      ...weather,
-      current: {
-        ...weather.current,
-        time: targetHour.time,
-        temperature: targetHour.temperature,
-        apparentTemperature: targetHour.apparentTemperature,
-        relativeHumidity: targetHour.relativeHumidity,
-        precipitation: targetHour.precipitation,
-        weatherCode: targetHour.weatherCode,
-        cloudCover: targetHour.cloudCover,
-        windSpeed: targetHour.windSpeed,
-        windDirection: targetHour.windDirection,
-        windGusts: targetHour.windGusts,
-        uvIndex: targetHour.uvIndex,
-        isDay: isDayScrubbed,
-      },
-    };
-  }, [weather, scrubIndex]);
-
-  const { theme, isAutoThemeSync, syncThemeWithWeather } = useWeatherTheme();
-
-  // Living Sky Auto-Theme Sync effect when weather or time-scrubber changes
-  useEffect(() => {
-    if (!effectiveWeather || !isAutoThemeSync) return;
-    syncThemeWithWeather({
-      weatherCode: effectiveWeather.current.weatherCode,
-      temperatureC: effectiveWeather.current.temperature,
-      isDay: effectiveWeather.current.isDay,
-      currentTimeIso: effectiveWeather.current.time,
-      sunriseIso: effectiveWeather.daily[0]?.sunrise,
-      sunsetIso: effectiveWeather.daily[0]?.sunset,
-      latitude: effectiveWeather.location.latitude,
-    });
-  }, [effectiveWeather, isAutoThemeSync, syncThemeWithWeather]);
-
-  const handleToggleSound = () => {
-    if (!effectiveWeather) return;
-    const wmo = decodeWmoCode(effectiveWeather.current.weatherCode, effectiveWeather.current.isDay);
-    const active = soundscape.toggle(
-      wmo.category,
-      effectiveWeather.current.precipitation,
-      effectiveWeather.current.windSpeed
-    );
-    setIsSoundPlaying(active);
+  const handleSelectAsset = (asset: Asset) => {
+    sound.playClick();
+    setSelectedAsset(asset);
   };
 
-  // Dark mode effect
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [isDarkMode]);
-
-  // Load weather data
-  const loadWeatherData = useCallback(async (loc: LocationData, isManualRefresh = false) => {
-    if (isManualRefresh) {
-      setIsRefreshing(true);
-    } else {
-      setIsLoading(true);
-    }
-    setLoadError(null);
-
-    try {
-      const data = await fetchFullWeather(loc);
-      setWeather(data);
-      setSelectedHour(undefined);
-      setScrubIndex(0);
-      try {
-        localStorage.setItem('aether_saved_loc', JSON.stringify(loc));
-      } catch {}
-    } catch (err: any) {
-      console.error('Weather load error:', err);
-      setLoadError(err?.message || 'Unable to load atmospheric data. Please check your internet connection.');
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadWeatherData(currentLocation);
-  }, [currentLocation, loadWeatherData]);
-
-  // Toggle Units
-  const toggleTempUnit = () => {
-    const next = tempUnit === 'celsius' ? 'fahrenheit' : 'celsius';
-    setTempUnit(next);
-    localStorage.setItem('aether_temp_unit', next);
+  const openLegal = (tab: 'DISCLAIMER' | 'PRIVACY' | 'TERMS') => {
+    sound.playClick();
+    setLegalTab(tab);
+    setLegalModalOpen(true);
   };
 
-  const toggleSpeedUnit = () => {
-    const next = speedUnit === 'mph' ? 'kmh' : 'mph';
-    setSpeedUnit(next);
-    localStorage.setItem('aether_speed_unit', next);
-  };
+  // Generate dynamic arrow bars for active asset and timeframe
+  const bars = useMemo(() => {
+    const barCount = timeframe === '15M' ? 44 : timeframe === '1H' ? 36 : timeframe === '4H' ? 28 : 20;
+    return generateArrowBars(selectedAsset.price, barCount);
+  }, [selectedAsset, timeframe]);
 
-  // Derived Intelligence Modules (use effectiveWeather so time-scrubbing updates insights too!)
-  const alerts: SevereAlert[] = effectiveWeather ? deriveSevereAlerts(effectiveWeather) : [];
-  const activities = effectiveWeather ? deriveActivitySuitabilities(effectiveWeather) : [];
-  const transit = effectiveWeather ? deriveTransitImpact(effectiveWeather) : null;
-  const wardrobe = effectiveWeather ? deriveWardrobeRecommendations(effectiveWeather) : null;
+  // Fundamentals for active asset (smart fallback covers all 42 instruments)
+  const fundamentals = useMemo(() => {
+    return getAssetFundamentals(selectedAsset);
+  }, [selectedAsset]);
+
+  const navItems: { id: NavPage; label: string; tag: string }[] = [
+    { id: 'CHART', label: '01 // ARROW CHART', tag: 'PRICE × VOL' },
+    { id: 'JOURNAL', label: '02 // TRADING JOURNAL', tag: 'AUTOTIMED' },
+    { id: 'DASHBOARD', label: '03 // DASHBOARD & PAST SIGNALS', tag: 'ARCHIVE' },
+    { id: 'SCANNER', label: '04 // WHALE RADAR', tag: '42 PAIRS' },
+    { id: 'CALCULATOR', label: '05 // RISK & LOTS', tag: 'SAFE SIZING' },
+    { id: 'INSTRUMENTS', label: '06 // ALL PAIRS', tag: `${ASSETS.length} ASSETS` },
+    { id: 'FUNDAMENTALS', label: '07 // FUNDAMENTALS', tag: 'PLAIN WORDS' },
+    { id: 'NEWS', label: '08 // NEWS RADAR', tag: '3-STAR IMPACT' },
+    { id: 'SIGNALS', label: '09 // LIVE SIGNALS', tag: 'WHATSAPP/SMS' },
+    { id: 'BOTS', label: '10 // FREE BOTS', tag: 'BACKTESTED' },
+    { id: 'DOCS', label: '11 // HOW IT WORKS', tag: 'MANUAL' },
+    { id: 'ALL', label: 'MASTER // ALL-IN-ONE', tag: 'FULL DESK' },
+  ];
 
   return (
-    <div className={`relative min-h-screen w-full flex flex-col ${theme.ui.pageBg} ${theme.ui.primaryText} font-sans selection:bg-rose-500 selection:text-amber-50 transition-colors pb-20`}>
-      
-      {/* Dynamic Atmospheric Particle Canvas (Volumetric Clouds, Sun Rays, Rain, Stardust Motes, Constellation Patterns) */}
-      {effectiveWeather && (
-        <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-          <AtmosphericCanvas
-            weather={effectiveWeather}
-            showConstellationPatterns={showConstellationPatterns}
-            className="w-full h-full opacity-90 dark:opacity-95"
-          />
-          <div 
-            className="absolute inset-0 pointer-events-none" 
-            style={{
-              backgroundImage: `radial-gradient(circle at 50% 18%, ${theme.accentColors.glow} 0%, transparent 65%)`
-            }}
-          />
-        </div>
-      )}
-
-      {/* Fullscreen Zen Sanctuary Overlay ("Look Outside") */}
-      {effectiveWeather && (
-        <ZenSanctuaryOverlay
-          isOpen={isZenMode}
-          onExit={() => setIsZenMode(false)}
-          weather={effectiveWeather}
-          unit={tempUnit}
-          isSoundPlaying={isSoundPlaying}
-          onToggleSound={handleToggleSound}
-          onOpenSoundMixer={() => setIsSoundMixerOpen(true)}
-          showConstellationPatterns={showConstellationPatterns}
-          onToggleConstellations={() => setShowConstellationPatterns((prev) => !prev)}
-        />
-      )}
-
-      {/* Standard Observatory Interface (hidden when in Fullscreen Zen Window Mode) */}
-      {!isZenMode && (
-        <>
-          {/* Global Sticky Navigation Header */}
-          <WeatherHeader 
-            activeTab={activeTab}
-            onSelectTab={navigateToPage}
-            tempUnit={tempUnit}
-            onToggleTempUnit={toggleTempUnit}
-            speedUnit={speedUnit}
-            onToggleSpeedUnit={toggleSpeedUnit}
-            isDarkMode={isDarkMode}
-            onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
-            onRefresh={() => loadWeatherData(currentLocation, true)}
-            isRefreshing={isRefreshing}
-            alertCount={alerts.length}
-            onOpenAlerts={() => setShowAlertModal(true)}
-            isSoundPlaying={isSoundPlaying}
-            onToggleSound={handleToggleSound}
-            soundLevels={soundLevels}
-            onOpenSoundMixer={() => setIsSoundMixerOpen(true)}
-            onEnterZenMode={() => setIsZenMode(true)}
-          />
-
-          {/* Main Content Area */}
-          <main className="relative z-10 flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-            
-            {/* Dedicated Page Breadcrumbs & Snapshot (for subpages) */}
-            {effectiveWeather && (
-              <PageNavigationBanner 
-                activeTab={activeTab}
-                onNavigate={navigateToPage}
-                location={effectiveWeather.location}
-                current={effectiveWeather.current}
-                unit={tempUnit}
-              />
-            )}
-
-            {/* Hyperlocal Search & Location Bar */}
-            <div className="w-full">
-              <HyperlocalSearch 
-                currentLocation={currentLocation}
-                onSelectLocation={(loc) => setCurrentLocation(loc)}
-              />
-            </div>
-
-            {/* Collectible Illustrated World Postcard Deck (Multi-City Comparison) */}
-            {activeTab === 'overview' && (
-              <WorldPostcardDeck
-                currentLocation={currentLocation}
-                currentTempC={effectiveWeather?.current.temperature}
-                unit={tempUnit}
-                onSelectLocation={(loc) => setCurrentLocation(loc)}
-              />
-            )}
-
-            {/* Loading State Skeleton */}
-            {isLoading && !effectiveWeather && (
-              <div className={`relative w-full py-24 rounded-[36px] ${theme.ui.cardSurface} ${theme.ui.cardBorder} ${theme.ui.glowShadow} overflow-hidden flex flex-col items-center justify-center space-y-4`}>
-                <ThemeCardArtWrapper theme={theme} variant="hero" />
-                <div className="relative z-10">
-                  <div className={`w-16 h-16 rounded-3xl ${theme.ui.activePill} flex items-center justify-center ${theme.ui.activePillText} shadow-lg`}>
-                    <CloudSun className="w-8 h-8 animate-pulse" />
-                  </div>
-                  <Loader2 className={`w-6 h-6 ${theme.ui.accentText} animate-spin absolute -top-1 -right-1`} />
-                </div>
-                <div className="relative z-10 text-center space-y-1">
-                  <p className={`text-sm font-black ${theme.ui.primaryText}`}>
-                    Gathering Atmospheric Radar &amp; Telemetry
-                  </p>
-                  <p className={`text-xs font-medium ${theme.ui.secondaryText}`}>
-                    Contacting high-resolution meteorological satellites for {currentLocation.name}...
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Load Error Fallback */}
-            {loadError && (
-              <div className={`relative w-full p-6 rounded-3xl ${theme.ui.cardSurface} ${theme.ui.cardBorder} flex items-center justify-between gap-4 overflow-hidden`}>
-                <ThemeCardArtWrapper theme={theme} variant="compact" />
-                <div className="relative z-10 flex items-center gap-3">
-                  <AlertTriangle className="w-6 h-6 text-rose-500 shrink-0" />
-                  <div>
-                    <p className={`text-sm font-black ${theme.ui.primaryText}`}>
-                      Forecast Telemetry Interrupted
-                    </p>
-                    <p className={`text-xs ${theme.ui.secondaryText}`}>
-                      {loadError}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => loadWeatherData(currentLocation)}
-                  className={`relative z-10 px-4 py-2 rounded-xl text-xs font-black ${theme.ui.activePill} ${theme.ui.activePillText} shrink-0 transition-transform active:scale-95 cursor-pointer`}
-                >
-                  Retry Sync
-                </button>
-              </div>
-            )}
-
-            {/* DEDICATED MULTI-PAGE VIEWS */}
-            {effectiveWeather && (
-              <>
-                {/* ==================================================== */}
-                {/* PAGE 1: FORECAST HUB                                 */}
-                {/* ==================================================== */}
-                {activeTab === 'overview' && (
-                  <div className="space-y-8 animate-fade-in">
-                    <CurrentHero 
-                      weather={effectiveWeather}
-                      unit={tempUnit}
-                      speedUnit={speedUnit}
-                      alerts={alerts}
-                      onOpenAlerts={() => setShowAlertModal(true)}
-                      onOpenRadar={() => navigateToPage('radar')}
-                    />
-
-                    {/* Interactive 24-Hour Time-Travel Scrubber */}
-                    <TimeTravelScrubber
-                      weather={effectiveWeather}
-                      unit={tempUnit}
-                      scrubIndex={scrubIndex}
-                      onScrubChange={setScrubIndex}
-                    />
-
-                    {/* Climate Normals & "This Day in History" 30-Year Anomaly Bar */}
-                    <ClimateNormalsAnomalyBar
-                      weather={effectiveWeather}
-                      unit={tempUnit}
-                    />
-
-                    <HourlyCurveChart 
-                      hourly={effectiveWeather.hourly}
-                      unit={tempUnit}
-                    />
-
-                    <HourlyForecastSlider 
-                      hourly={effectiveWeather.hourly}
-                      unit={tempUnit}
-                      speedUnit={speedUnit}
-                      selectedHourTime={selectedHour?.time}
-                      onSelectHour={(hour) => setSelectedHour(hour)}
-                    />
-
-                    <DailyForecastOutlook 
-                      daily={effectiveWeather.daily}
-                      unit={tempUnit}
-                    />
-
-                    {/* Split-Screen Dual-City Climate & Telemetry Compare */}
-                    <DualCitySplitCompare
-                      primaryWeather={effectiveWeather}
-                      unit={tempUnit}
-                      speedUnit={speedUnit}
-                      scrubIndex={scrubIndex}
-                    />
-
-                    {/* Barometric Pressure Tendency & Migraine / Sinus Forecast */}
-                    <BarometricPhysiologyTracker weather={effectiveWeather} />
-
-                    {/* Custom Weather Alert Rules + 1-Click .ics Calendar & Dossier Export */}
-                    <CustomRulesAndExportStudio
-                      weather={effectiveWeather}
-                      unit={tempUnit}
-                      speedUnit={speedUnit}
-                    />
-
-                    {/* Live USGS Seismic Earthquakes & NASA EONET Planetary Hazards */}
-                    <PlanetaryHazardsMonitor weather={effectiveWeather} />
-
-                    {/* Live Heliocentric Solar System Orrery */}
-                    <SolarSystemOrrery weather={effectiveWeather} />
-
-                    {/* Live Star Patterns & Zenith Constellation Sky Dome */}
-                    <StarPatternSkyDome
-                      weather={effectiveWeather}
-                      ambientSkyConstellations={showConstellationPatterns}
-                      onToggleAmbientSkyConstellations={() => setShowConstellationPatterns((prev) => !prev)}
-                    />
-
-                    <PageLaunchersGrid 
-                      weather={effectiveWeather}
-                      transit={transit}
-                      wardrobe={wardrobe}
-                      activities={activities}
-                      onNavigate={navigateToPage}
-                    />
-                  </div>
-                )}
-
-                {/* ==================================================== */}
-                {/* PAGE 2: LIVE DOPPLER RADAR                           */}
-                {/* ==================================================== */}
-                {activeTab === 'radar' && (
-                  <div className="space-y-6 animate-fade-in">
-                    <LiveRadarMap location={effectiveWeather.location} isDarkMode={isDarkMode} />
-                    <SkySpotterReportFeed weather={effectiveWeather} />
-                    <RouteWeatherPlanner
-                      originLocation={effectiveWeather.location}
-                      unit={tempUnit}
-                      speedUnit={speedUnit}
-                    />
-                    <AtmosphericSoundingProfile
-                      weather={effectiveWeather}
-                      unit={tempUnit}
-                      speedUnit={speedUnit}
-                    />
-                    <PlanetaryHazardsMonitor weather={effectiveWeather} />
-                  </div>
-                )}
-
-                {/* ==================================================== */}
-                {/* PAGE 3: CELESTIAL & STARGAZING OBSERVATORY           */}
-                {/* ==================================================== */}
-                {activeTab === 'celestial' && (
-                  <div className="space-y-6 animate-fade-in">
-                    <AuroraSpaceWeather weather={effectiveWeather} />
-                    <CelestialObservatory
-                      weather={effectiveWeather}
-                      ambientSkyConstellations={showConstellationPatterns}
-                      onToggleAmbientSkyConstellations={() => setShowConstellationPatterns((prev) => !prev)}
-                    />
-                  </div>
-                )}
-
-                {/* ==================================================== */}
-                {/* PAGE 4: BOTANICAL, PET & HOME MICRO-CLIMATE STUDIO   */}
-                {/* ==================================================== */}
-                {activeTab === 'microclimate' && (
-                  <div className="space-y-6 animate-fade-in">
-                    <SolarEnergyYieldEstimator weather={effectiveWeather} />
-                    <MicroClimateStudio weather={effectiveWeather} unit={tempUnit} />
-                  </div>
-                )}
-
-                {/* ==================================================== */}
-                {/* PAGE 5: AIR QUALITY & POLLEN SANCTUARY               */}
-                {/* ==================================================== */}
-                {activeTab === 'air-pollen' && (
-                  <div className="space-y-6 animate-fade-in">
-                    <PollenAndAirQuality 
-                      airQuality={effectiveWeather.airQuality}
-                      current={effectiveWeather.current}
-                    />
-                    <BarometricPhysiologyTracker weather={effectiveWeather} />
-                  </div>
-                )}
-
-                {/* ==================================================== */}
-                {/* PAGE 6: COMMUTE & TRANSIT INTELLIGENCE               */}
-                {/* ==================================================== */}
-                {activeTab === 'commute' && transit && (
-                  <div className="space-y-6 animate-fade-in">
-                    <AviationMetarDeck weather={effectiveWeather} />
-                    <RouteWeatherPlanner
-                      originLocation={effectiveWeather.location}
-                      unit={tempUnit}
-                      speedUnit={speedUnit}
-                    />
-                    <TransitAndCommuteFeed 
-                      transit={transit}
-                      locationName={effectiveWeather.location.name}
-                    />
-                  </div>
-                )}
-
-                {/* ==================================================== */}
-                {/* PAGE 7: OUTDOOR & EVENT PLANNER                      */}
-                {/* ==================================================== */}
-                {activeTab === 'outdoor' && (
-                  <div className="space-y-6 animate-fade-in">
-                    <MarineSwellTideStudio
-                      weather={effectiveWeather}
-                      unit={tempUnit}
-                    />
-                    <CustomRulesAndExportStudio
-                      weather={effectiveWeather}
-                      unit={tempUnit}
-                      speedUnit={speedUnit}
-                    />
-                    <AtmosphericSoundingProfile
-                      weather={effectiveWeather}
-                      unit={tempUnit}
-                      speedUnit={speedUnit}
-                    />
-                    <OutdoorActivityPlanner 
-                      activities={activities}
-                      locationName={effectiveWeather.location.name}
-                    />
-                  </div>
-                )}
-
-                {/* ==================================================== */}
-                {/* PAGE 8: SMART WARDROBE ADVISOR                       */}
-                {/* ==================================================== */}
-                {activeTab === 'wardrobe' && wardrobe && (
-                  <div className="space-y-6 animate-fade-in">
-                    <SmartWardrobePrompts 
-                      wardrobe={wardrobe}
-                      apparentTempC={effectiveWeather.current.apparentTemperature}
-                    />
-                  </div>
-                )}
-              </>
-            )}
-          </main>
-
-          {/* Floating 1-Tap Page Dock */}
-          <FloatingPageDock 
-            activeTab={activeTab}
-            onSelectTab={navigateToPage}
-          />
-
-          {/* Atmospheric Footer */}
-          <footer className={`relative z-10 mt-16 border-t ${theme.ui.headerBorder} ${theme.ui.headerSurface} py-8 text-xs ${theme.ui.secondaryText} transition-all overflow-hidden`}>
-            <ThemeCardArtWrapper theme={theme} variant="compact" showCornerFiligrees={false} />
-            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-2.5">
-                  <div className={`w-7 h-7 rounded-xl ${theme.ui.activePill} flex items-center justify-center ${theme.ui.activePillText} font-black text-xs shadow-sm`}>
-                    A
-                  </div>
-                  <span className={`font-black ${theme.ui.primaryText} text-sm`}>
-                    AETHER ATMOS
-                  </span>
-                  <span className={`text-[11px] font-bold ${theme.ui.subheadingText}`}>
-                    — Planetary Meteorological Sanctuary · {theme.name}
-                  </span>
-                </div>
-
-                <div className={`flex flex-wrap items-center justify-center gap-4 text-xs font-bold ${theme.ui.primaryText}`}>
-                  <button onClick={() => navigateToPage('overview')} className={`hover:${theme.ui.accentText} transition-colors cursor-pointer`}>
-                    10-Day Outlook
-                  </button>
-                  <button onClick={() => navigateToPage('celestial')} className={`hover:${theme.ui.accentText} transition-colors cursor-pointer`}>
-                    Celestial &amp; Lunar
-                  </button>
-                  <button onClick={() => navigateToPage('microclimate')} className={`hover:${theme.ui.accentText} transition-colors cursor-pointer`}>
-                    Botanical &amp; Home
-                  </button>
-                  <button onClick={() => navigateToPage('radar')} className={`hover:${theme.ui.accentText} transition-colors cursor-pointer`}>
-                    Live Doppler Radar
-                  </button>
-                  <button onClick={() => navigateToPage('air-pollen')} className={`hover:${theme.ui.accentText} transition-colors cursor-pointer`}>
-                    Allergen &amp; UV
-                  </button>
-                  <button onClick={() => navigateToPage('commute')} className={`hover:${theme.ui.accentText} transition-colors cursor-pointer`}>
-                    Commute Impact
-                  </button>
-                  <button onClick={() => navigateToPage('outdoor')} className={`hover:${theme.ui.accentText} transition-colors cursor-pointer`}>
-                    Event Suitability
-                  </button>
-                  <button onClick={() => navigateToPage('wardrobe')} className={`hover:${theme.ui.accentText} transition-colors cursor-pointer`}>
-                    Wardrobe Layering
-                  </button>
-                </div>
-              </div>
-
-              <div className={`pt-4 border-t ${theme.ui.dividerBorder} flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] font-medium ${theme.ui.secondaryText}`}>
-                <p>
-                  Telemetry powered by Open-Meteo High-Resolution NWP Models, Multi-Sector Doppler Synthesis Arrays, Copernicus Atmosphere Monitoring Service, and postcodes.io.
-                </p>
-                <p className="shrink-0 font-mono text-[10px] font-bold">
-                  &copy; {new Date().getFullYear()} AETHER ATMOS • {theme.name} World
-                </p>
-              </div>
-            </div>
-          </footer>
-        </>
-      )}
-
-      {/* Modular Atmospheric Theme Selector Modal */}
-      <ThemeSelectorModal />
-
-      {/* 5-Channel Soundscape Mixer Modal */}
-      <SoundscapeMixerModal
-        isOpen={isSoundMixerOpen}
-        onClose={() => setIsSoundMixerOpen(false)}
-        weather={effectiveWeather}
-        isSoundPlaying={isSoundPlaying}
-        onToggleSound={handleToggleSound}
-        onEnterZenMode={() => setIsZenMode(true)}
+    <div className="min-h-screen bg-black text-white font-mono flex flex-col selection:bg-white selection:text-black">
+      {/* Topmost Terminal Header with Unified Wide Search & User Session Trigger */}
+      <TerminalHeader
+        allAssets={ASSETS}
+        selectedAsset={selectedAsset}
+        user={user}
+        onOpenAuth={() => setAuthModalOpen(true)}
+        onSelectAsset={handleSelectAsset}
+        onOpenInstruments={() => navigateTo('INSTRUMENTS')}
       />
 
-      {/* Severe Weather Alerts Modal */}
-      {effectiveWeather && (
-        <SevereWeatherAlertsModal 
-          isOpen={showAlertModal}
-          onClose={() => setShowAlertModal(false)}
-          alerts={alerts}
-          locationName={effectiveWeather.location.name}
-        />
-      )}
+      {/* Primary Dedicated Page Navigation Bar */}
+      <nav className="border-b border-zinc-800 bg-zinc-950/90 sticky top-0 z-40 backdrop-blur-xs px-4 py-2 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 overflow-x-auto text-xs py-0.5">
+          <span className="text-[10px] text-zinc-500 mr-1 hidden sm:inline">VIEW:</span>
+          {navItems.map((item) => {
+            const isActive = activePage === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => navigateTo(item.id)}
+                className={`px-3 py-1.5 text-xs border transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                  isActive
+                    ? 'border-white bg-white text-black font-extrabold shadow-[0_0_12px_rgba(255,255,255,0.25)]'
+                    : 'border-zinc-800 bg-black text-zinc-400 hover:text-white hover:border-zinc-600'
+                }`}
+              >
+                <span>{item.label}</span>
+                <span
+                  className={`text-[9px] px-1 py-0.2 ${
+                    isActive ? 'bg-black text-white' : 'text-zinc-600'
+                  }`}
+                >
+                  {item.tag}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Current Active Asset indicator with click-to-open directory */}
+        <div className="flex items-center gap-2 text-xs text-zinc-400">
+          <span className="text-zinc-500 text-[11px] uppercase">
+            ACTIVE ASSET:
+          </span>
+          <button
+            onClick={() => navigateTo('INSTRUMENTS')}
+            className="text-white font-extrabold border border-white bg-black px-2.5 py-1 hover:bg-zinc-900 transition-colors shadow-[0_0_8px_rgba(255,255,255,0.2)] flex items-center gap-1.5"
+            title="Search & browse all instruments"
+          >
+            <span>{selectedAsset.symbol}</span>
+            <span className="text-zinc-300 font-mono">
+              ${selectedAsset.price.toLocaleString(undefined, {
+                minimumFractionDigits: selectedAsset.price < 10 ? 3 : 2,
+                maximumFractionDigits: selectedAsset.price < 10 ? 3 : 2,
+              })}
+            </span>
+            <span
+              className={`text-[9px] px-1 py-0.2 ${
+                selectedAsset.change24h >= 0 ? 'bg-white text-black' : 'border border-zinc-700 text-zinc-300'
+              }`}
+            >
+              {selectedAsset.change24h >= 0 ? '▲' : '▼'} {Math.abs(selectedAsset.change24h)}%
+            </span>
+          </button>
+        </div>
+      </nav>
+
+      {/* Main Page Content Canvas */}
+      <main className="flex-1 max-w-[1600px] w-full mx-auto p-4 space-y-6">
+        {/* Terminal Header Alert Banner */}
+        <div className="border border-white/80 bg-zinc-950 p-4 text-xs">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="p-2 border border-white bg-black">
+                <span className="text-xl font-bold">▲</span>
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-white font-bold text-sm tracking-wider">
+                    ARROW QUANT PROTOCOL // LONDON REGION (UK)
+                  </span>
+                  <span className="bg-white text-black text-[10px] font-bold px-1.5 py-0.2">
+                    ACTIVE
+                  </span>
+                </div>
+                <p className="text-zinc-400 mt-1 max-w-4xl leading-relaxed">
+                  The alternative to Japanese candlesticks: <strong className="text-white">Arrows get taller with price movement</strong> and <strong className="text-white">wider with trading volume</strong>. Zero confusing jargon.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="border border-zinc-800 p-2 bg-black text-right">
+                <span className="text-[10px] text-zinc-500 block">SELECTED ASSET</span>
+                <span className="text-white font-bold">{selectedAsset.symbol} ({selectedAsset.name})</span>
+              </div>
+              <div className="border border-zinc-800 p-2 bg-black text-right">
+                <span className="text-[10px] text-zinc-500 block">VALUATION STATUS</span>
+                <span className="text-white font-bold">{selectedAsset.simpleValuation}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ======================================================== */}
+        {/* PAGE 1: ARROW VECTOR CHART VIEW                          */}
+        {/* ======================================================== */}
+        {(activePage === 'CHART' || activePage === 'ALL') && (
+          <section id="chart-section" className="space-y-4">
+            {activePage === 'ALL' && (
+              <div className="flex items-center gap-2 text-xs font-bold text-zinc-400 border-b border-zinc-900 pb-1">
+                <span>[01 // PROPRIETARY ARROW VECTOR CHART]</span>
+              </div>
+            )}
+            <ArrowVolumeChart
+              asset={selectedAsset}
+              bars={bars}
+              timeframe={timeframe}
+              setTimeframe={setTimeframe}
+            />
+
+            {/* Quick Risk Calculator integrated below chart for immediate execution */}
+            {activePage === 'CHART' && (
+              <RiskCalculator selectedAsset={selectedAsset} />
+            )}
+          </section>
+        )}
+
+        {/* ======================================================== */}
+        {/* PAGE 2: CLEAN TRADING JOURNAL                            */}
+        {/* ======================================================== */}
+        {(activePage === 'JOURNAL' || activePage === 'ALL') && (
+          <section id="journal-section" className="space-y-3">
+            {activePage === 'ALL' && (
+              <div className="flex items-center gap-2 text-xs font-bold text-zinc-400 border-b border-zinc-900 pb-1">
+                <span>[02 // CLEAN QUANT TRADING JOURNAL & DISCIPLINE LOG]</span>
+              </div>
+            )}
+            <TradingJournal
+              assets={ASSETS}
+              selectedAsset={selectedAsset}
+              activeSignals={TRADING_SIGNALS}
+              pastSignals={HISTORICAL_SIGNALS}
+              onSelectAsset={handleSelectAsset}
+              onNavigateToChart={() => navigateTo('CHART')}
+            />
+          </section>
+        )}
+
+        {/* ======================================================== */}
+        {/* PAGE 3: USER DASHBOARD & PAST DESK SIGNALS ARCHIVE       */}
+        {/* ======================================================== */}
+        {(activePage === 'DASHBOARD' || activePage === 'ALL') && (
+          <section id="dashboard-section" className="space-y-3">
+            {activePage === 'ALL' && (
+              <div className="flex items-center gap-2 text-xs font-bold text-zinc-400 border-b border-zinc-900 pb-1">
+                <span>[03 // USER DASHBOARD & HISTORICAL DESK SIGNALS ARCHIVE]</span>
+              </div>
+            )}
+            <UserDashboard
+              user={user}
+              historicalSignals={HISTORICAL_SIGNALS}
+              onOpenAuth={() => setAuthModalOpen(true)}
+              onSelectAsset={handleSelectAsset}
+              onNavigateToJournal={() => navigateTo('JOURNAL')}
+              onNavigateToChart={() => navigateTo('CHART')}
+              assets={ASSETS}
+            />
+          </section>
+        )}
+
+        {/* ======================================================== */}
+        {/* PAGE 4: WHALE MARKET SCANNER                             */}
+        {/* ======================================================== */}
+        {(activePage === 'SCANNER' || activePage === 'ALL') && (
+          <section id="scanner-section" className="space-y-3">
+            {activePage === 'ALL' && (
+              <div className="flex items-center gap-2 text-xs font-bold text-zinc-400 border-b border-zinc-900 pb-1">
+                <span>[04 // LIVE FAT ARROW WHALE MARKET SCANNER]</span>
+              </div>
+            )}
+            <WhaleScanner
+              assets={ASSETS}
+              onSelectAsset={handleSelectAsset}
+              onNavigateToChart={() => navigateTo('CHART')}
+            />
+          </section>
+        )}
+
+        {/* ======================================================== */}
+        {/* PAGE 5: PLAIN ENGLISH RISK CALCULATOR                    */}
+        {/* ======================================================== */}
+        {(activePage === 'CALCULATOR' || activePage === 'ALL') && (
+          <section id="calculator-section" className="space-y-3">
+            {activePage === 'ALL' && (
+              <div className="flex items-center gap-2 text-xs font-bold text-zinc-400 border-b border-zinc-900 pb-1">
+                <span>[05 // JARGON-FREE RISK & LOT SIZE CALCULATOR]</span>
+              </div>
+            )}
+            <RiskCalculator selectedAsset={selectedAsset} />
+          </section>
+        )}
+
+        {/* ======================================================== */}
+        {/* PAGE 6: INSTRUMENTS EXPLORER DIRECTORY                   */}
+        {/* ======================================================== */}
+        {(activePage === 'INSTRUMENTS' || activePage === 'ALL') && (
+          <section id="instruments-section" className="space-y-3">
+            {activePage === 'ALL' && (
+              <div className="flex items-center gap-2 text-xs font-bold text-zinc-400 border-b border-zinc-900 pb-1">
+                <span>[06 // ALL MARKET INSTRUMENTS & DIRECTORY]</span>
+              </div>
+            )}
+            <InstrumentsExplorer
+              assets={ASSETS}
+              selectedAsset={selectedAsset}
+              onSelectAsset={handleSelectAsset}
+              onNavigateToChart={() => navigateTo('CHART')}
+            />
+          </section>
+        )}
+
+        {/* ======================================================== */}
+        {/* PAGE 7: PLAIN-ENGLISH FUNDAMENTALS VIEW                  */}
+        {/* ======================================================== */}
+        {(activePage === 'FUNDAMENTALS' || activePage === 'ALL') && (
+          <section id="fundamentals-section" className="space-y-3">
+            {activePage === 'ALL' && (
+              <div className="flex items-center gap-2 text-xs font-bold text-zinc-400 border-b border-zinc-900 pb-1">
+                <span>[07 // PLAIN ENGLISH FUNDAMENTALS & SOLVENCY CHEATSHEET]</span>
+              </div>
+            )}
+            <SimpleFundamentals
+              gauges={fundamentals}
+              selectedAsset={selectedAsset}
+            />
+          </section>
+        )}
+
+        {/* ======================================================== */}
+        {/* PAGE 8: ECONOMIC NEWS FORECAST CALENDAR                  */}
+        {/* ======================================================== */}
+        {(activePage === 'NEWS' || activePage === 'ALL') && (
+          <section id="news-section" className="space-y-3">
+            {activePage === 'ALL' && (
+              <div className="flex items-center gap-2 text-xs font-bold text-zinc-400 border-b border-zinc-900 pb-1">
+                <span>[08 // ECONOMIC NEWS FORECAST & IMPACT RADAR]</span>
+              </div>
+            )}
+            <NewsForecastTable news={NEWS_FORECAST_DATA} />
+          </section>
+        )}
+
+        {/* ======================================================== */}
+        {/* PAGE 9: REAL-TIME SIGNALS & PHONE ALERTS                 */}
+        {/* ======================================================== */}
+        {(activePage === 'SIGNALS' || activePage === 'ALL') && (
+          <section id="signals-section" className="space-y-3">
+            {activePage === 'ALL' && (
+              <div className="flex items-center gap-2 text-xs font-bold text-zinc-400 border-b border-zinc-900 pb-1">
+                <span>[09 // REAL-TIME ARROW SIGNALS & SAMPLE TESTER]</span>
+              </div>
+            )}
+            <SignalAlertCard signals={TRADING_SIGNALS} />
+          </section>
+        )}
+
+        {/* ======================================================== */}
+        {/* PAGE 10: FREE TRADING BOT CODE VAULT                     */}
+        {/* ======================================================== */}
+        {(activePage === 'BOTS' || activePage === 'ALL') && (
+          <section id="bots-section" className="space-y-3">
+            {activePage === 'ALL' && (
+              <div className="flex items-center gap-2 text-xs font-bold text-zinc-400 border-b border-zinc-900 pb-1">
+                <span>[10 // FREE TRADING BOT CODE VAULT & 30-DAY BACKTEST]</span>
+              </div>
+            )}
+            <BotVaultModal bots={FREE_BOTS} />
+          </section>
+        )}
+
+        {/* ======================================================== */}
+        {/* PAGE 11: DOCUMENTATION & SPEC SHEET                      */}
+        {/* ======================================================== */}
+        {(activePage === 'DOCS' || activePage === 'ALL') && (
+          <section id="docs-section" className="space-y-3">
+            {activePage === 'ALL' && (
+              <div className="flex items-center gap-2 text-xs font-bold text-zinc-400 border-b border-zinc-900 pb-1">
+                <span>[11 // SYSTEM SPECIFICATION & TRADING MANUAL]</span>
+              </div>
+            )}
+            <DocumentationView />
+          </section>
+        )}
+      </main>
+
+      {/* Terminal Footer with Legal Compliance Links */}
+      <footer className="border-t border-zinc-800 bg-black py-6 px-6 font-mono text-xs text-zinc-400">
+        <div className="max-w-[1600px] mx-auto space-y-4">
+          {/* Main Footer Row */}
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-white font-bold">
+                <TerminalIcon size={14} />
+                <span>ARROW QUANT PROTOCOL // LONDON REGION (UK)</span>
+              </div>
+              <p className="text-[11px] text-zinc-500">
+                Monochrome vector execution terminal. Engineered for clarity, speed, and institutional transparency.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-4 text-[11px]">
+              <div>
+                <span className="text-zinc-500">MONETIZATION:</span>{' '}
+                <strong className="text-white">Free Open Bots + Paid WhatsApp/SMS/Email Alerts (£24/mo)</strong>
+              </div>
+              <span className="text-zinc-700">|</span>
+              <div>
+                <span className="text-zinc-500">ENGINE:</span>{' '}
+                <strong className="text-white">v2.4.0 (LONDON QUANT DESK)</strong>
+              </div>
+            </div>
+          </div>
+
+          {/* Legal Compliance & Disclaimer Bar */}
+          <div className="border-t border-zinc-900 pt-3 flex flex-wrap items-center justify-between gap-3 text-[11px]">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => openLegal('DISCLAIMER')}
+                className="flex items-center gap-1 text-zinc-400 hover:text-white transition-colors"
+              >
+                <ShieldAlert size={12} />
+                <span className="underline underline-offset-2">FINANCIAL RISK DISCLAIMER</span>
+              </button>
+              <span className="text-zinc-700">•</span>
+              <button
+                onClick={() => openLegal('PRIVACY')}
+                className="flex items-center gap-1 text-zinc-400 hover:text-white transition-colors"
+              >
+                <Lock size={12} />
+                <span className="underline underline-offset-2">PRIVACY POLICY (UK GDPR)</span>
+              </button>
+              <span className="text-zinc-700">•</span>
+              <button
+                onClick={() => openLegal('TERMS')}
+                className="flex items-center gap-1 text-zinc-400 hover:text-white transition-colors"
+              >
+                <FileText size={12} />
+                <span className="underline underline-offset-2">TERMS OF SERVICE</span>
+              </button>
+            </div>
+
+            <div className="text-zinc-500">
+              © {new Date().getFullYear()} Arrow Quant Systems UK Ltd. All rights reserved.
+            </div>
+          </div>
+
+          {/* FCA Standard Risk Warning Snippet */}
+          <div className="text-[10px] text-zinc-600 bg-zinc-950 p-2 border border-zinc-900 leading-normal">
+            <strong className="text-zinc-400">High Risk Investment Notice:</strong> Financial trading carries a high degree of risk to your capital. Spread bets, CFDs, and cryptocurrency derivatives are complex instruments with a high risk of losing money rapidly due to leverage. Our terminal provides mathematical vector indicators and algorithmic models for research purposes only.
+          </div>
+        </div>
+      </footer>
+
+      {/* Auth / Login Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        user={user}
+        onLogin={handleLogin}
+        onLogout={handleLogout}
+      />
+
+      {/* Legal & Compliance Modal */}
+      <LegalModal
+        isOpen={legalModalOpen}
+        onClose={() => setLegalModalOpen(false)}
+        initialTab={legalTab}
+      />
     </div>
   );
-}
+};
 
-export default function App() {
-  return (
-    <WeatherThemeProvider>
-      <WeatherAppContent />
-    </WeatherThemeProvider>
-  );
-}
+export default App;
